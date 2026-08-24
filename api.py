@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel, HttpUrl
 from typing import List
 from datetime import datetime
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
@@ -19,6 +20,18 @@ class Game(BaseModel):
     offers: List[StoreOffer]
 
 app = FastAPI()
+
+origins = [
+    "*",  # Na czas testów zezwalamy na połączenia z każdego źródła (w tym z plików lokalnych file://)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 file_name = 'preorders.json'
 

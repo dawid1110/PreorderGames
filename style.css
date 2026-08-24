@@ -1,0 +1,113 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+    margin: 0;
+    padding: 40px 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1 {
+    margin-bottom: 5px;
+    color: #38bdf8;
+}
+
+.subtitle {
+    color: #94a3b8;
+    margin-bottom: 30px;
+}
+
+.loading, .error {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin-top: 40px;
+}
+
+.error {
+    color: #f87171;
+}
+
+/* Karta gry */
+.game-card {
+    background-color: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #334155;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.platform-badge {
+    background-color: #0284c7;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.release-date {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.game-title {
+    font-size: 1.25rem;
+    margin: 0 0 15px 0;
+    color: #ffffff;
+}
+
+/* Oferty sklepów */
+.offers-list {
+    border-top: 1px solid #334155;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.offer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0f172a;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.store-name {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.price {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.btn-store {
+    background-color: #3b82f6;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: background-color 0.2s;
+}
+
+.btn-store:hover {
+    background-color: #2563eb;
+}

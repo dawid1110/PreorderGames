@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moje Preordery Gier</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎮 Lista Preorderów</h1>
+        <p class="subtitle">Zarządzaj swoimi zamówieniami w jednym miejscu</p>
+        
+        <!-- Tu JavaScript wrzuci pobrane gry -->
+        <div id="games-container">
+            <p class="loading">Ładowanie danych z API...</p>
+        </div>
+    </div>
+
+    <script>
+        // Pobieramy dane z naszego endpointu GET w FastAPI
+        fetch('http://127.0.0.1:8000/get_preorders')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Błąd podczas pobierania danych");
+                }
+                return response.json();
+            })
+            .then(data => {
+                const container = document.getElementById('games-container');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<p class="loading">Brak preorderów w bazie.</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                // Iterujemy po każdej grze i budujemy HTML
+                data.forEach(game => {
+                    // Generujemy oferty sklepów dla danej gry
+                    let offersHtml = game.offers.map(o => `
+                        <div class="offer-item">
+                            <span class="store-name">🛒 ${o.store_name}</span>
+                            <span class="price">${o.price.toFixed(2)} zł</span>
+                            <a href="${o.url}" target="_blank" class="btn-store">Sprawdź sklep</a>
+                        </div>
+                    `).join('');
+
+                    // Składamy kartę gry
+                    container.innerHTML += `
+                        <div class="game-card">
+                            <div class="card-header">
+                                <span class="platform-badge">${game.platform}</span>
+                                <span class="release-date">📅 Premiera: ${game.release_date}</span>
+                            </div>
+                            <h2 class="game-title">${game.title}</h2>
+                            <div class="offers-list">
+                                ${offersHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Błąd:', error);
+                document.getElementById('games-container').innerHTML = 
+                    '<p class="error">Nie udało się połączyć z API. Upewnij się, że serwer FastAPI jest uruchomiony!</p>';
+            });
+    </script>
+
+</body>
+</html>
