@@ -25,11 +25,14 @@ file_name = 'preorders.json'
 
 @app.get("/")
 def test():
+    """Testowe uruchomienie api czy poprawnie zwroci ten tekst"""
     return "Hello World"
 
 @app.post("/add")
 def add_preorder(incoming_data: Game):
-
+    """
+    Api przygotowane do dodania i posortowania nowego wpisu w kolejnosc daty premiery. Cena koniecznie z kropką!
+    """
     existing_data = []
 
     if os.path.exists(file_name):
