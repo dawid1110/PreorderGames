@@ -20,7 +20,8 @@
       {
         "store_name": "PerfectBlue",
         "price": 258.99,
-        "is_selected": true
+        "is_selected": true,
+        "url": "https://perfectblue.pl/produkt/gra-ps5-the-blood-of-dawnwalker-edycja-premierowa/"
       }
     ]
   },
@@ -32,7 +33,8 @@
       {
         "store_name": "PerfectBlue",
         "price": 239.99,
-        "is_selected": true
+        "is_selected": true,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-onimusha-way-of-the-sword/"
       }
     ]
   },
@@ -43,8 +45,9 @@
     "offers": [
       {
         "store_name": "Ultima",
-        "price": 349.90,
-        "is_selected": true
+        "price": 349.9,
+        "is_selected": true,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-lego-batman-dziedzictwo-mrocznego-rycerza-edycja-deluxe"
       }
     ]
   },
@@ -56,12 +59,14 @@
       {
         "store_name": "PerfectBlue",
         "price": 249.99,
-        "is_selected": false
+        "is_selected": false,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-007-first-light/"
       },
       {
         "store_name": "Ultima",
-        "price": 249.90,
-        "is_selected": false
+        "price": 249.9,
+        "is_selected": false,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-007-first-light"
       }
     ]
   },
@@ -73,12 +78,14 @@
       {
         "store_name": "PerfectBlue",
         "price": 258.99,
-        "is_selected": false
+        "is_selected": false,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-lies-of-p-complete-edition/"
       },
       {
         "store_name": "Ultima",
-        "price": 259.90,
-        "is_selected": false
+        "price": 259.9,
+        "is_selected": false,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-lies-of-p-complete-edition"
       }
     ]
   },
@@ -90,12 +97,14 @@
       {
         "store_name": "PerfectBlue",
         "price": 339.99,
-        "is_selected": false
+        "is_selected": false,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-dave-the-diver-collectors-edition/"
       },
       {
         "store_name": "Ultima",
-        "price": 369.90,
-        "is_selected": false
+        "price": 369.9,
+        "is_selected": false,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-dave-the-diver-collectors-edition"
       }
     ]
   },
@@ -107,12 +116,14 @@
       {
         "store_name": "PerfectBlue",
         "price": 178.99,
-        "is_selected": false
+        "is_selected": false,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-dragon-s-dogma-2-dark-arisen-master-edition/"
       },
       {
         "store_name": "Ultima",
-        "price": 189.90,
-        "is_selected": false
+        "price": 189.9,
+        "is_selected": false,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-dragon-s-dogma-2-dark-arisen-master-edition"
       }
     ]
   },
@@ -124,12 +135,14 @@
       {
         "store_name": "PerfectBlue",
         "price": 214.99,
-        "is_selected": false
+        "is_selected": false,
+        "url": "https://perfectblue.pl/produkt/gra-nintendo-switch-2-observer-system-redux-limited-edition/"
       },
       {
         "store_name": "Ultima",
-        "price": 219.90,
-        "is_selected": false
+        "price": 219.9,
+        "is_selected": false,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-observer-system-redux-limited-edition"
       }
     ]
   },
@@ -140,8 +153,9 @@
     "offers": [
       {
         "store_name": "Ultima",
-        "price": 149.90,
-        "is_selected": true
+        "price": 149.9,
+        "is_selected": true,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-two-point-hospital-full-health-collection"
       }
     ]
   },
@@ -152,8 +166,9 @@
     "offers": [
       {
         "store_name": "Ultima",
-        "price": 369.90,
-        "is_selected": true
+        "price": 369.9,
+        "is_selected": true,
+        "url": "https://ultima.pl/produkt/nintendo-switch-2-moonlighter-2-the-endless-vault-collectors-edition"
       }
     ]
   }
