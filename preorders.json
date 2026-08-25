@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "title": "Przykładowa Gra PS5",
+    "platform": "PS5",
+    "store": "Ultima",
+    "order_number": "12345678",
+    "release_date": "2026-04-15",
+    "price": 259.99
+  }
+]
