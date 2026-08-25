@@ -1,213 +1,178 @@
 /* ====================================================
-   NOWY, MINIMALISTYCZNY STYL FORMULARZA (PRO)
+   1. ZMIENNE GLOBALNE I BAZA
+   ==================================================== */
+:root {
+    --bg-main: #09090b;
+    --card-bg: rgba(24, 24, 27, 0.6);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --success: #10b981;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+}
+
+/* Klawisz powrotu używany na podstronach */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--text-main);
+}
+
+/* Kluczowe klatki animacji */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ====================================================
+   2. STYL SZKLANY: LISTA PREORDERÓW I MENU GŁÓWNE
    ==================================================== */
 
-body.minimal-dark {
-    background-color: #09090b;
-    color: #ededed;
-}
-
-.add-container {
-    max-width: 680px; /* Ciasny, skupiony formularz wygląda bardziej pro */
-    margin-top: 40px;
-}
-
-.minimal-nav {
-    margin-bottom: 40px;
-}
-
-.minimal-header h1 {
-    font-size: 2.2rem;
-    color: #ffffff;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-}
-
-.minimal-header p {
-    color: #a1a1aa;
-    font-size: 1rem;
-    margin-bottom: 40px;
-}
-
-/* Karta główna formularza */
-.form-card-pro {
-    background: #121214;
-    border: 1px solid #27272a;
-    border-radius: 12px;
-    padding: 32px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-.form-section-title {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #71717a;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-/* Pola wejściowe */
-.input-group {
-    margin-bottom: 24px;
-}
-
-.input-group label {
-    display: block;
-    font-size: 0.9rem;
-    color: #d4d4d8;
-    margin-bottom: 8px;
-    font-weight: 500;
-}
-
-.input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.input-icon {
+/* Dekoracyjne rozmyte kule w tle */
+.bg-glow {
     position: absolute;
-    left: 14px;
-    color: #71717a;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: -1;
+    opacity: 0.4;
 }
+.bg-glow-1 { top: -100px; left: -100px; width: 400px; height: 400px; background: #3b82f6; }
+.bg-glow-2 { bottom: 10%; right: -50px; width: 350px; height: 350px; background: #8b5cf6; }
 
-.input-pro {
-    width: 100%;
-    background: #09090b;
-    border: 1px solid #27272a;
-    color: #ffffff;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
+.app-header { text-align: center; margin-bottom: 50px; }
+.gradient-text {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
 }
+.subtitle { color: var(--text-muted); font-size: 1.1rem; margin: 0; }
 
-/* Jeśli input ma ikonę, przesuń tekst w prawo */
-.input-wrapper .input-pro {
-    padding-left: 44px;
+/* 2.A: Siatka Listy Gier (list.html) */
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+.game-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.platform-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; background: rgba(255, 255, 255, 0.1); color: #fff; text-transform: uppercase; }
+.platform-ps5 { background: #00439c; }
+.platform-ns2 { background: #e60012; }
+.release-date { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+.game-title { font-size: 1.4rem; font-weight: 600; margin: 0 0 20px 0; line-height: 1.3; }
 
-.input-pro:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
+/* Lista ofert w kartach */
+.offers-list { display: flex; flex-direction: column; gap: 10px; }
+.offer-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 12px; }
+.store-name { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.95rem; color: #e4e4e7; }
+.offer-right { display: flex; align-items: center; gap: 16px; }
+.price { color: var(--success); font-weight: 700; font-size: 1.05rem; min-width: 85px; text-align: right; }
+.btn-store { background: var(--primary); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1px solid transparent; }
+.btn-store:hover { background: var(--primary-hover); transform: scale(1.05); }
 
-.form-row-pro {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
+/* Stany ładowania i błędu */
+.loading-state, .error-state, .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: var(--text-muted); text-align: center; }
+.spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
 
-.form-divider-pro {
-    height: 1px;
-    background: #27272a;
-    margin: 32px -32px; /* Rozciąga linię na pełną szerokość karty */
-}
+/* 2.B: Menu Główne (index.html) */
+.dashboard-container { max-width: 900px; }
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 20px; }
+.module-card { display: flex; flex-direction: column; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 20px; padding: 35px 30px; text-decoration: none; color: var(--text-main); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); opacity: 0; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; cursor: pointer; }
+.module-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6); border-color: rgba(255, 255, 255, 0.15); background: rgba(30, 30, 35, 0.75); }
+.module-card:hover .arrow-icon { transform: translateX(6px); }
+.module-icon { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+.icon-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+.module-card h2 { font-size: 1.6rem; margin: 0 0 12px 0; }
+.module-card p { color: var(--text-muted); line-height: 1.6; margin: 0 0 30px 0; flex-grow: 1; }
+.module-footer { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.05rem; }
+.text-blue { color: #60a5fa; }
+.text-purple { color: #c084fc; }
+.arrow-icon { transition: transform 0.3s ease; }
 
-/* Sekcja sklepów */
-.offers-header-pro {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
 
-.offers-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+/* ====================================================
+   3. STYL MINIMALISTYCZNY PRO: FORMULARZ (add.html)
+   ==================================================== */
 
-.offer-row-pro {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    background: #18181b;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #27272a;
-}
+/* Izolujemy ten styl tylko dla podstrony z klasą "minimal-dark" w body */
+body.minimal-dark { background-color: #09090b; color: #ededed; }
 
-.offer-inputs {
-    display: grid;
-    grid-template-columns: 2fr 1fr 2fr;
-    gap: 8px;
-    flex-grow: 1;
-}
+.add-container { max-width: 680px; margin-top: 40px; }
+.minimal-nav { margin-bottom: 40px; }
+.minimal-header h1 { font-size: 2.2rem; color: #ffffff; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+.minimal-header p { color: #a1a1aa; font-size: 1rem; margin-bottom: 40px; }
 
-/* Przyciski */
-.btn-outline-pro {
-    background: transparent;
-    border: 1px dashed #3f3f46;
-    color: #a1a1aa;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
+/* Karta formularza PRO */
+.form-card-pro { background: #121214; border: 1px solid #27272a; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+.form-section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #71717a; font-weight: 600; margin-bottom: 20px; }
 
-.btn-outline-pro:hover {
-    border-color: #d4d4d8;
-    color: #ffffff;
-}
+/* Inputy PRO */
+.input-group { margin-bottom: 24px; }
+.input-group label { display: block; font-size: 0.9rem; color: #d4d4d8; margin-bottom: 8px; font-weight: 500; }
+.input-wrapper { position: relative; display: flex; align-items: center; }
+.input-icon { position: absolute; left: 14px; color: #71717a; }
+.input-pro { width: 100%; background: #09090b; border: 1px solid #27272a; color: #ffffff; padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; transition: all 0.2s ease; box-sizing: border-box; }
+.input-wrapper .input-pro { padding-left: 44px; }
+.input-pro:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+.form-row-pro { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-divider-pro { height: 1px; background: #27272a; margin: 32px -32px; }
 
-.btn-delete-pro {
-    background: transparent;
-    border: none;
-    color: #71717a;
-    padding: 8px;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
+/* Sklepy PRO */
+.offers-header-pro { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.offers-stack { display: flex; flex-direction: column; gap: 12px; }
+.offer-row-pro { display: flex; gap: 12px; align-items: center; background: #18181b; padding: 8px; border-radius: 8px; border: 1px solid #27272a; }
+.offer-inputs { display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 8px; flex-grow: 1; }
 
-.btn-delete-pro:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.form-footer-pro {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid #27272a;
-}
-
-.btn-solid-pro {
-    background: #ffffff;
-    color: #09090b;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-}
-
-.btn-solid-pro:hover {
-    background: #d4d4d8;
-    transform: scale(1.02);
-}
-
-.btn-solid-pro:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
+/* Przyciski PRO */
+.btn-outline-pro { background: transparent; border: 1px dashed #3f3f46; color: #a1a1aa; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.btn-outline-pro:hover { border-color: #d4d4d8; color: #ffffff; }
+.btn-delete-pro { background: transparent; border: none; color: #71717a; padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+.btn-delete-pro:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.form-footer-pro { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #27272a; }
+.btn-solid-pro { background: #ffffff; color: #09090b; border: none; padding: 12px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+.btn-solid-pro:hover { background: #d4d4d8; transform: scale(1.02); }
+.btn-solid-pro:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 @media (max-width: 600px) {
     .form-row-pro { grid-template-columns: 1fr; gap: 0; }
