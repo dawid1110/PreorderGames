@@ -68,7 +68,7 @@
                 </div>
                 
                 <div id="offers-container" class="offers-stack">
-                    <!-- Dynamiczne wiersze -->
+                    <!-- Dynamiczne wiersze z ofertami generowane przez JS -->
                 </div>
 
                 <div class="form-footer-pro">
@@ -89,15 +89,17 @@
         const form = document.getElementById('add-game-form');
         const statusMsg = document.getElementById('form-status');
 
+        // UWAGA: Zaktualizowana struktura dodaje pole orderNumber!
         function createOfferRow() {
             const offerDiv = document.createElement('div');
             offerDiv.className = 'offer-row-pro';
             
             offerDiv.innerHTML = `
-                <div class="offer-inputs">
-                    <input type="text" class="input-pro store-input" placeholder="Sklep (np. Ultima)" required>
+                <div class="offer-inputs" style="grid-template-columns: 2fr 1fr 1fr 2fr;">
+                    <input type="text" class="input-pro store-input" placeholder="Sklep" required>
                     <input type="number" step="0.01" class="input-pro price-input" placeholder="Cena PLN" required>
-                    <input type="url" class="input-pro url-input" placeholder="Link (opcjonalnie)">
+                    <input type="number" class="input-pro order-input" placeholder="Nr Zamówienia" required>
+                    <input type="url" class="input-pro url-input" placeholder="Link (Wymagany URL)" required>
                 </div>
                 <button type="button" class="btn-delete-pro" title="Usuń">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -123,9 +125,15 @@
             offerRows.forEach(row => {
                 const store = row.querySelector('.store-input').value;
                 const price = parseFloat(row.querySelector('.price-input').value);
-                const url = row.querySelector('.url-input').value || "";
+                const orderNum = parseInt(row.querySelector('.order-input').value);
+                const url = row.querySelector('.url-input').value; // Pydantic HttpUrl wymaga prawidłowego adresu m.in "https://..."
                 
-                offers.push({ store_name: store, price: price, url: url, is_selected: false });
+                offers.push({ 
+                    store_name: store, 
+                    price: price, 
+                    orderNumber: orderNum, // Dodane brakujące pole dla backendu
+                    url: url
+                });
             });
 
             if(offers.length === 0) {
@@ -133,10 +141,15 @@
                 return;
             }
 
+            // Przekształcamy datę z HTML (YYYY-MM-DD) do formatu akceptowanego przez Twój backend (DD.MM.YYYY)
+            const rawDate = document.getElementById('release_date').value;
+            const [year, month, day] = rawDate.split('-');
+            const formattedDate = \`\${day}.\${month}.\${year}\`;
+
             const newGame = {
                 title: document.getElementById('title').value,
                 platform: document.getElementById('platform').value,
-                release_date: document.getElementById('release_date').value,
+                release_date: formattedDate,
                 offers: offers
             };
 
@@ -146,7 +159,8 @@
             statusMsg.innerHTML = '';
 
             try {
-                const response = await fetch('https://preorder-api-pdjz.onrender.com/add/', {
+                // Poprawiony endpoint FastAPI na /add
+                const response = await fetch('https://preorder-api-pdjz.onrender.com/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newGame)
@@ -158,11 +172,13 @@
                     offersContainer.innerHTML = '';
                     createOfferRow();
                 } else {
-                    throw new Error("Błąd zapisu");
+                    const errData = await response.json();
+                    console.error("Szczegóły błędu Pydantic: ", errData);
+                    throw new Error("Błąd walidacji");
                 }
             } catch (error) {
                 console.error(error);
-                statusMsg.innerHTML = '<span class="error-text">✖ Wystąpił błąd komunikacji</span>';
+                statusMsg.innerHTML = '<span class="error-text">✖ Odrzucone przez serwer (Sprawdź konsolę)</span>';
             } finally {
                 btnSubmit.innerHTML = 'Zapisz Preorder <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
                 btnSubmit.disabled = false;
