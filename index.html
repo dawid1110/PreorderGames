@@ -20,7 +20,7 @@
 
     <script>
         // Pobieramy dane z naszego endpointu GET w FastAPI
-        fetch('http://127.0.0.1:8000/get_preorders')
+        fetch('https://preorder-api-pdjz.onrender.com/get_preorders')
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Błąd podczas pobierania danych");
