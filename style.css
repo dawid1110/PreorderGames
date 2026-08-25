@@ -215,3 +215,93 @@ body {
     0% { opacity: 0; transform: translateY(30px); }
     100% { opacity: 1; transform: translateY(0); }
 }
+
+.dashboard-container {
+    max-width: 900px; /* Zawężamy trochę kontener menu głównego, by moduły nie były rozciągnięte na całe ekrany */
+}
+
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.module-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 35px 30px;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    cursor: pointer;
+}
+
+/* Efekt Hover na module */
+.module-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(30, 30, 35, 0.75);
+}
+
+.module-card:hover .arrow-icon {
+    transform: translateX(6px); /* Strzałka przesuwa się w prawo po najechaniu */
+}
+
+/* Ikony modułów */
+.module-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.icon-blue {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.icon-purple {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.module-card h2 {
+    font-size: 1.6rem;
+    margin: 0 0 12px 0;
+}
+
+.module-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 30px 0;
+    flex-grow: 1; /* Popycha footer na sam dół karty */
+}
+
+/* Stopka karty ze strzałką */
+.module-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.text-blue { color: #60a5fa; }
+.text-purple { color: #c084fc; }
+
+.arrow-icon {
+    transition: transform 0.3s ease;
+}
