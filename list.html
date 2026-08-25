@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preorder Hub 🎮</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Dekoracyjne tło -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="container">
+        <header class="app-header">
+            <h1 class="gradient-text">Preorder Hub</h1>
+            <p class="subtitle">Zarządzaj swoimi zamówieniami w jednym miejscu</p>
+        </header>
+        
+        <div id="games-container">
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Ładowanie danych z chmury...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        fetch('https://preorder-api-pdjz.onrender.com/get_preorders')
+            .then(response => {
+                if (!response.ok) throw new Error("Błąd podczas pobierania danych");
+                return response.json();
+            })
+            .then(data => {
+                const container = document.getElementById('games-container');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Brak preorderów w bazie.</div>';
+                    return;
+                }
+                
+                // Budujemy kod HTML dla wszystkich gier naraz (szybsze renderowanie)
+                const cardsHtml = data.map((game, index) => {
+                    // Generujemy oferty z zabezpieczeniem nazwy (store_name lub store)
+                    let offersHtml = game.offers.map(o => `
+                        <div class="offer-item">
+                            <span class="store-name">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                                ${o.store_name || o.store}
+                            </span>
+                            <div class="offer-right">
+                                <span class="price">${o.price.toFixed(2)} zł</span>
+                                <a href="${o.url || '#'}" target="_blank" class="btn-store">Kup</a>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Zwracamy gotową kartę z lekkim opóźnieniem animacji (kaskada)
+                    return `
+                        <div class="game-card" style="animation-delay: ${index * 0.1}s">
+                            <div class="card-header">
+                                <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
+                                <span class="release-date">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    ${game.release_date}
+                                </span>
+                            </div>
+                            <h2 class="game-title">${game.title}</h2>
+                            <div class="offers-list">
+                                ${offersHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Wrzucamy wszystko w siatkę (Grid)
+                container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
+            })
+            .catch(error => {
+                console.error('Błąd:', error);
+                document.getElementById('games-container').innerHTML = `
+                    <div class="error-state">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <p>Nie udało się połączyć z serwerem. Sprawdź backend na Renderze!</p>
+                    </div>`;
+            });
+    </script>
+
+</body>
+</html>
