@@ -5,7 +5,7 @@
     "release_date": "2026-08-27",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 278.99,
         "is_selected": true
       }
@@ -17,7 +17,7 @@
     "release_date": "2026-09-03",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 258.99,
         "is_selected": true
       }
@@ -29,7 +29,7 @@
     "release_date": "2026-09-04",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 239.99,
         "is_selected": true
       }
@@ -41,7 +41,7 @@
     "release_date": "2026-09-18",
     "offers": [
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 349.90,
         "is_selected": true
       }
@@ -53,12 +53,12 @@
     "release_date": "2026-09-30",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 249.99,
         "is_selected": false
       },
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 249.90,
         "is_selected": false
       }
@@ -70,12 +70,12 @@
     "release_date": "2026-10-02",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 258.99,
         "is_selected": false
       },
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 259.90,
         "is_selected": false
       }
@@ -87,12 +87,12 @@
     "release_date": "2026-10-08",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 339.99,
         "is_selected": false
       },
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 369.90,
         "is_selected": false
       }
@@ -104,12 +104,12 @@
     "release_date": "2026-10-29",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 178.99,
         "is_selected": false
       },
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 189.90,
         "is_selected": false
       }
@@ -121,12 +121,12 @@
     "release_date": "2026-10-30",
     "offers": [
       {
-        "store": "PerfectBlue",
+        "store_name": "PerfectBlue",
         "price": 214.99,
         "is_selected": false
       },
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 219.90,
         "is_selected": false
       }
@@ -138,7 +138,7 @@
     "release_date": "2026-11-26",
     "offers": [
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 149.90,
         "is_selected": true
       }
@@ -150,7 +150,7 @@
     "release_date": "2026-11-13",
     "offers": [
       {
-        "store": "Ultima",
+        "store_name": "Ultima",
         "price": 369.90,
         "is_selected": true
       }
