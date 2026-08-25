@@ -43,8 +43,10 @@
                     let offersHtml = game.offers.map(o => `
                         <div class="offer-item">
                             <span class="store-name">🛒 ${o.store_name}</span>
-                            <span class="price">${o.price.toFixed(2)} zł</span>
-                            <a href="${o.url}" target="_blank" class="btn-store">Sprawdź sklep</a>
+                            <div class="offer-right">
+                                <span class="price">${o.price.toFixed(2)} zł</span>
+                                <a href="${o.url}" target="_blank" class="btn-store">Sprawdź sklep</a>
+                            </div>
                         </div>
                     `).join('');
 
