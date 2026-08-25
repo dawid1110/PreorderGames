@@ -3,77 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dodaj Preorder 🎮</title>
+    <title>Dodaj Preorder | Ultra</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-    <!-- Dekoracyjne tło -->
-    <div class="bg-glow bg-glow-1"></div>
-    <div class="bg-glow bg-glow-2"></div>
+<body class="minimal-dark">
 
     <div class="container add-container">
         <!-- Pasek Nawigacji Powrotu -->
-        <nav class="nav-back">
+        <nav class="nav-back minimal-nav">
             <a href="index.html" class="back-link">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Wróć do Menu
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Wróć
             </a>
         </nav>
 
-        <header class="app-header">
-            <h1 class="gradient-text-purple">Nowy Preorder</h1>
-            <p class="subtitle">Wprowadź dane gry i oferty sklepów, aby zapisać je w chmurze.</p>
+        <header class="app-header minimal-header">
+            <h1>Dodaj nowy tytuł</h1>
+            <p>Uzupełnij szczegóły zamówienia i śledź ceny w sklepach.</p>
         </header>
 
         <!-- Główna karta formularza -->
-        <div class="form-card" style="animation-delay: 0.1s;">
+        <div class="form-card-pro">
             <form id="add-game-form">
                 
-                <!-- SEKCJA: Główne informacje o grze -->
-                <div class="form-group">
+                <div class="form-section-title">Dane podstawowe</div>
+                
+                <div class="input-group">
                     <label for="title">Tytuł Gry</label>
-                    <input type="text" id="title" class="form-input" placeholder="np. Ghost of Yōtei" required>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><circle cx="17" cy="12" r="1"></circle><circle cx="13" cy="12" r="1"></circle><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line></svg>
+                        <input type="text" id="title" class="input-pro" placeholder="np. Cyberpunk 2077: Sequel" required>
+                    </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
+                <div class="form-row-pro">
+                    <div class="input-group">
                         <label for="platform">Platforma</label>
-                        <select id="platform" class="form-select" required>
-                            <option value="PS5">PlayStation 5</option>
-                            <option value="NS2">Nintendo Switch 2</option>
-                            <option value="XSX">Xbox Series X</option>
-                            <option value="PC">PC (Steam/GOG)</option>
-                        </select>
+                        <div class="input-wrapper">
+                            <select id="platform" class="input-pro select-pro" required>
+                                <option value="PS5">PlayStation 5</option>
+                                <option value="NS2">Nintendo Switch 2</option>
+                                <option value="XSX">Xbox Series X</option>
+                                <option value="PC">PC</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="input-group">
                         <label for="release_date">Data Premiery</label>
-                        <input type="date" id="release_date" class="form-input" required>
+                        <div class="input-wrapper">
+                            <input type="date" id="release_date" class="input-pro" required>
+                        </div>
                     </div>
                 </div>
 
-                <hr class="form-divider">
+                <div class="form-divider-pro"></div>
 
-                <!-- SEKCJA: Oferty sklepów (Dynamiczna) -->
-                <div class="offers-header">
-                    <h3>Oferty Sklepów</h3>
-                    <button type="button" id="btn-add-offer" class="btn-secondary">
+                <div class="offers-header-pro">
+                    <div class="form-section-title" style="margin: 0;">Śledzone sklepy</div>
+                    <button type="button" id="btn-add-offer" class="btn-outline-pro">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Dodaj Ofertę
+                        Dodaj pozycję
                     </button>
                 </div>
                 
-                <div id="offers-container">
-                    <!-- Tutaj pojawiają się poszczególne pola ofert (generowane przez JS) -->
+                <div id="offers-container" class="offers-stack">
+                    <!-- Dynamiczne wiersze -->
                 </div>
 
-                <!-- SEKCJA Zapisz/Wyślij -->
-                <div class="form-actions">
+                <div class="form-footer-pro">
                     <div id="form-status" class="status-msg"></div>
-                    <button type="submit" class="btn-primary" id="btn-submit">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        Zapisz Grę w Bazie
+                    <button type="submit" class="btn-solid-pro" id="btn-submit">
+                        Zapisz Preorder
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                     </button>
                 </div>
 
@@ -81,47 +83,41 @@
         </div>
     </div>
 
-    <!-- Logika formularza (Frontend -> FastAPI) -->
     <script>
         const offersContainer = document.getElementById('offers-container');
         const btnAddOffer = document.getElementById('btn-add-offer');
         const form = document.getElementById('add-game-form');
         const statusMsg = document.getElementById('form-status');
 
-        // Funkcja dodająca wiersz (sklep, cena, link) do formularza
         function createOfferRow() {
             const offerDiv = document.createElement('div');
-            offerDiv.className = 'offer-input-row';
+            offerDiv.className = 'offer-row-pro';
             
             offerDiv.innerHTML = `
-                <input type="text" class="form-input store-input" placeholder="Nazwa sklepu (np. Ultima)" required>
-                <input type="number" step="0.01" class="form-input price-input" placeholder="Cena (np. 259.99)" required>
-                <input type="url" class="form-input url-input" placeholder="Link do sklepu (opcjonalnie)">
-                <button type="button" class="btn-remove-offer" title="Usuń ofertę">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <div class="offer-inputs">
+                    <input type="text" class="input-pro store-input" placeholder="Sklep (np. Ultima)" required>
+                    <input type="number" step="0.01" class="input-pro price-input" placeholder="Cena PLN" required>
+                    <input type="url" class="input-pro url-input" placeholder="Link (opcjonalnie)">
+                </div>
+                <button type="button" class="btn-delete-pro" title="Usuń">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             `;
 
-            // Obsługa usuwania wiersza oferty
-            offerDiv.querySelector('.btn-remove-offer').addEventListener('click', () => {
+            offerDiv.querySelector('.btn-delete-pro').addEventListener('click', () => {
                 offerDiv.remove();
             });
 
             offersContainer.appendChild(offerDiv);
         }
 
-        // Dodajemy jedną pustą ofertę domyślnie na start
         createOfferRow();
-
-        // Podpinamy przycisk "Dodaj Ofertę"
         btnAddOffer.addEventListener('click', createOfferRow);
 
-        // Obsługa wysyłki formularza (POST do FastAPI na Renderze)
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 1. Zbieramy dane z ofert (iterujemy po każdym wierszu z kontenera)
-            const offerRows = document.querySelectorAll('.offer-input-row');
+            const offerRows = document.querySelectorAll('.offer-row-pro');
             const offers = [];
             
             offerRows.forEach(row => {
@@ -129,20 +125,14 @@
                 const price = parseFloat(row.querySelector('.price-input').value);
                 const url = row.querySelector('.url-input').value || "";
                 
-                offers.push({
-                    store_name: store,
-                    price: price,
-                    url: url,
-                    is_selected: false // domyślnie przy dodawaniu
-                });
+                offers.push({ store_name: store, price: price, url: url, is_selected: false });
             });
 
             if(offers.length === 0) {
-                alert("Musisz dodać przynajmniej jedną ofertę!");
+                alert("Dodaj chociaż jedną ofertę!");
                 return;
             }
 
-            // 2. Budujemy docelowy JSON gry
             const newGame = {
                 title: document.getElementById('title').value,
                 platform: document.getElementById('platform').value,
@@ -150,40 +140,34 @@
                 offers: offers
             };
 
-            // 3. Wysyłamy JSON do FastAPI za pomocą POST
             const btnSubmit = document.getElementById('btn-submit');
-            btnSubmit.innerHTML = 'Zapisywanie...';
+            btnSubmit.innerHTML = 'Przetwarzanie...';
             btnSubmit.disabled = true;
             statusMsg.innerHTML = '';
 
             try {
-                // TUTAJ ZMIEŃ NA SWÓJ ENDPOINT POST Z RENDERA!
-                // np. https://preorder-api-pdjz.onrender.com/preorders/
                 const response = await fetch('https://preorder-api-pdjz.onrender.com/preorders/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newGame)
                 });
 
                 if (response.ok) {
-                    statusMsg.innerHTML = '<span class="success-text">Gra została dodana do bazy pomyślnie!</span>';
-                    form.reset(); // Czyścimy formularz
-                    offersContainer.innerHTML = ''; // Usuwamy dodane oferty
-                    createOfferRow(); // Generujemy znowu jeden pusty wiersz
+                    statusMsg.innerHTML = '<span class="success-text">✔ Dodano pomyślnie</span>';
+                    form.reset();
+                    offersContainer.innerHTML = '';
+                    createOfferRow();
                 } else {
-                    throw new Error("Błąd podczas zapisywania");
+                    throw new Error("Błąd zapisu");
                 }
             } catch (error) {
                 console.error(error);
-                statusMsg.innerHTML = '<span class="error-text">Wystąpił błąd! Sprawdź logi na Renderze.</span>';
+                statusMsg.innerHTML = '<span class="error-text">✖ Wystąpił błąd komunikacji</span>';
             } finally {
-                btnSubmit.innerHTML = 'Zapisz Grę w Bazie';
+                btnSubmit.innerHTML = 'Zapisz Preorder <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
                 btnSubmit.disabled = false;
             }
         });
     </script>
-
 </body>
 </html>
