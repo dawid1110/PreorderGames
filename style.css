@@ -93,9 +93,18 @@ h1 {
     color: #e2e8f0;
 }
 
+/* Nowy kontener trzymający cenę i przycisk po prawej stronie */
+.offer-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .price {
     color: #4ade80;
     font-weight: bold;
+    min-width: 85px; /* Daje każdej cenie tę samą przestrzeń, zapobiegając rozjeżdżaniu */
+    text-align: right; /* Wyrównuje tekst ceny do prawej */
 }
 
 .btn-store {
