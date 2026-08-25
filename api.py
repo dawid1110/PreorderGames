@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 class StoreOffer(BaseModel):
     store_name: str
     price: float
+    orderNumber: int
     url: HttpUrl
 
 class Game(BaseModel):
