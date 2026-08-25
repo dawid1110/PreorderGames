@@ -83,9 +83,10 @@ def add_preorder(incoming_data: Game):
     try:
         existing_data = sorted(
             existing_data,
-            key=lambda x: datetime.strptime(x["release_date"], "%d.%m.%Y")
+            key=lambda x: datetime.strptime(x["release_date"], "%Y-%m-%d")
         )
-    except ValueError:
+    except ValueError as e:
+        print(f"Błąd sortowania daty: {e}") # Teraz przynajmniej zobaczysz błąd w logach Rendera!
         pass
 
     with open(file_name,'w', encoding="utf-8") as f:

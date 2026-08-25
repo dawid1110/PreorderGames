@@ -139,10 +139,8 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    // NAPRAWIONA LINIJKA: Przekształcamy datę z YYYY-MM-DD do DD.MM.YYYY
-    const rawDate = document.getElementById('release_date').value;
-    const [year, month, day] = rawDate.split('-');
-    const formattedDate = `${day}.${month}.${year}`;
+    // Pobieramy datę prosto z kalendarza (jest już w dobrym formacie YYYY-MM-DD)
+    const formattedDate = document.getElementById('release_date').value;
 
     const newGame = {
         title: document.getElementById('title').value,
