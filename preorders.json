@@ -1,11 +1,159 @@
 [
   {
-    "id": 1,
-    "title": "Przykładowa Gra PS5",
+    "title": "Elden Ring Tarnished Edition",
+    "platform": "NS2",
+    "release_date": "2026-08-27",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 278.99,
+        "is_selected": true
+      }
+    ]
+  },
+  {
+    "title": "The Blood of Dawnwalker Edycja Premierowa",
     "platform": "PS5",
-    "store": "Ultima",
-    "order_number": "12345678",
-    "release_date": "2026-04-15",
-    "price": 259.99
+    "release_date": "2026-09-03",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 258.99,
+        "is_selected": true
+      }
+    ]
+  },
+  {
+    "title": "Onimusha: Way of the Sword",
+    "platform": "NS2",
+    "release_date": "2026-09-04",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 239.99,
+        "is_selected": true
+      }
+    ]
+  },
+  {
+    "title": "LEGO Batman: Dziedzictwo Mrocznego Rycerza Edycja Deluxe",
+    "platform": "NS2",
+    "release_date": "2026-09-18",
+    "offers": [
+      {
+        "store": "Ultima",
+        "price": 349.90,
+        "is_selected": true
+      }
+    ]
+  },
+  {
+    "title": "007 First Light",
+    "platform": "NS2",
+    "release_date": "2026-09-30",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 249.99,
+        "is_selected": false
+      },
+      {
+        "store": "Ultima",
+        "price": 249.90,
+        "is_selected": false
+      }
+    ]
+  },
+  {
+    "title": "Lies of P: Complete Edition",
+    "platform": "NS2",
+    "release_date": "2026-10-02",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 258.99,
+        "is_selected": false
+      },
+      {
+        "store": "Ultima",
+        "price": 259.90,
+        "is_selected": false
+      }
+    ]
+  },
+  {
+    "title": "Dave The Diver - Collectors Edition",
+    "platform": "NS2",
+    "release_date": "2026-10-08",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 339.99,
+        "is_selected": false
+      },
+      {
+        "store": "Ultima",
+        "price": 369.90,
+        "is_selected": false
+      }
+    ]
+  },
+  {
+    "title": "Dragon's Dogma 2: Dark Arisen Master Edition",
+    "platform": "NS2",
+    "release_date": "2026-10-29",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 178.99,
+        "is_selected": false
+      },
+      {
+        "store": "Ultima",
+        "price": 189.90,
+        "is_selected": false
+      }
+    ]
+  },
+  {
+    "title": "Observer: System Redux - Limited Edition",
+    "platform": "NS2",
+    "release_date": "2026-10-30",
+    "offers": [
+      {
+        "store": "PerfectBlue",
+        "price": 214.99,
+        "is_selected": false
+      },
+      {
+        "store": "Ultima",
+        "price": 219.90,
+        "is_selected": false
+      }
+    ]
+  },
+  {
+    "title": "Two Point Hospital - Full Health Collection",
+    "platform": "NS2",
+    "release_date": "2026-11-26",
+    "offers": [
+      {
+        "store": "Ultima",
+        "price": 149.90,
+        "is_selected": true
+      }
+    ]
+  },
+  {
+    "title": "Moonlighter 2: The Endless Vault - Collectors Edition",
+    "platform": "NS2",
+    "release_date": "2026-11-13",
+    "offers": [
+      {
+        "store": "Ultima",
+        "price": 369.90,
+        "is_selected": true
+      }
+    ]
   }
 ]
