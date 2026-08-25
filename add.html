@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodaj Preorder 🎮</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Dekoracyjne tło -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="container add-container">
+        <!-- Pasek Nawigacji Powrotu -->
+        <nav class="nav-back">
+            <a href="index.html" class="back-link">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Wróć do Menu
+            </a>
+        </nav>
+
+        <header class="app-header">
+            <h1 class="gradient-text-purple">Nowy Preorder</h1>
+            <p class="subtitle">Wprowadź dane gry i oferty sklepów, aby zapisać je w chmurze.</p>
+        </header>
+
+        <!-- Główna karta formularza -->
+        <div class="form-card" style="animation-delay: 0.1s;">
+            <form id="add-game-form">
+                
+                <!-- SEKCJA: Główne informacje o grze -->
+                <div class="form-group">
+                    <label for="title">Tytuł Gry</label>
+                    <input type="text" id="title" class="form-input" placeholder="np. Ghost of Yōtei" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="platform">Platforma</label>
+                        <select id="platform" class="form-select" required>
+                            <option value="PS5">PlayStation 5</option>
+                            <option value="NS2">Nintendo Switch 2</option>
+                            <option value="XSX">Xbox Series X</option>
+                            <option value="PC">PC (Steam/GOG)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="release_date">Data Premiery</label>
+                        <input type="date" id="release_date" class="form-input" required>
+                    </div>
+                </div>
+
+                <hr class="form-divider">
+
+                <!-- SEKCJA: Oferty sklepów (Dynamiczna) -->
+                <div class="offers-header">
+                    <h3>Oferty Sklepów</h3>
+                    <button type="button" id="btn-add-offer" class="btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Dodaj Ofertę
+                    </button>
+                </div>
+                
+                <div id="offers-container">
+                    <!-- Tutaj pojawiają się poszczególne pola ofert (generowane przez JS) -->
+                </div>
+
+                <!-- SEKCJA Zapisz/Wyślij -->
+                <div class="form-actions">
+                    <div id="form-status" class="status-msg"></div>
+                    <button type="submit" class="btn-primary" id="btn-submit">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Zapisz Grę w Bazie
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Logika formularza (Frontend -> FastAPI) -->
+    <script>
+        const offersContainer = document.getElementById('offers-container');
+        const btnAddOffer = document.getElementById('btn-add-offer');
+        const form = document.getElementById('add-game-form');
+        const statusMsg = document.getElementById('form-status');
+
+        // Funkcja dodająca wiersz (sklep, cena, link) do formularza
+        function createOfferRow() {
+            const offerDiv = document.createElement('div');
+            offerDiv.className = 'offer-input-row';
+            
+            offerDiv.innerHTML = `
+                <input type="text" class="form-input store-input" placeholder="Nazwa sklepu (np. Ultima)" required>
+                <input type="number" step="0.01" class="form-input price-input" placeholder="Cena (np. 259.99)" required>
+                <input type="url" class="form-input url-input" placeholder="Link do sklepu (opcjonalnie)">
+                <button type="button" class="btn-remove-offer" title="Usuń ofertę">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+
+            // Obsługa usuwania wiersza oferty
+            offerDiv.querySelector('.btn-remove-offer').addEventListener('click', () => {
+                offerDiv.remove();
+            });
+
+            offersContainer.appendChild(offerDiv);
+        }
+
+        // Dodajemy jedną pustą ofertę domyślnie na start
+        createOfferRow();
+
+        // Podpinamy przycisk "Dodaj Ofertę"
+        btnAddOffer.addEventListener('click', createOfferRow);
+
+        // Obsługa wysyłki formularza (POST do FastAPI na Renderze)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 1. Zbieramy dane z ofert (iterujemy po każdym wierszu z kontenera)
+            const offerRows = document.querySelectorAll('.offer-input-row');
+            const offers = [];
+            
+            offerRows.forEach(row => {
+                const store = row.querySelector('.store-input').value;
+                const price = parseFloat(row.querySelector('.price-input').value);
+                const url = row.querySelector('.url-input').value || "";
+                
+                offers.push({
+                    store_name: store,
+                    price: price,
+                    url: url,
+                    is_selected: false // domyślnie przy dodawaniu
+                });
+            });
+
+            if(offers.length === 0) {
+                alert("Musisz dodać przynajmniej jedną ofertę!");
+                return;
+            }
+
+            // 2. Budujemy docelowy JSON gry
+            const newGame = {
+                title: document.getElementById('title').value,
+                platform: document.getElementById('platform').value,
+                release_date: document.getElementById('release_date').value,
+                offers: offers
+            };
+
+            // 3. Wysyłamy JSON do FastAPI za pomocą POST
+            const btnSubmit = document.getElementById('btn-submit');
+            btnSubmit.innerHTML = 'Zapisywanie...';
+            btnSubmit.disabled = true;
+            statusMsg.innerHTML = '';
+
+            try {
+                // TUTAJ ZMIEŃ NA SWÓJ ENDPOINT POST Z RENDERA!
+                // np. https://preorder-api-pdjz.onrender.com/preorders/
+                const response = await fetch('https://preorder-api-pdjz.onrender.com/preorders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newGame)
+                });
+
+                if (response.ok) {
+                    statusMsg.innerHTML = '<span class="success-text">Gra została dodana do bazy pomyślnie!</span>';
+                    form.reset(); // Czyścimy formularz
+                    offersContainer.innerHTML = ''; // Usuwamy dodane oferty
+                    createOfferRow(); // Generujemy znowu jeden pusty wiersz
+                } else {
+                    throw new Error("Błąd podczas zapisywania");
+                }
+            } catch (error) {
+                console.error(error);
+                statusMsg.innerHTML = '<span class="error-text">Wystąpił błąd! Sprawdź logi na Renderze.</span>';
+            } finally {
+                btnSubmit.innerHTML = 'Zapisz Grę w Bazie';
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
