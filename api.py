@@ -40,21 +40,12 @@ class DeleteGameRequest(BaseModel):
     platform: str
 
 
-# ==========================================
-# 1. POBIERANIE PREORDERÓW (GET)
-# ==========================================
-# ==========================================
-# 1. POBIERANIE PREORDERÓW (GET)
-# ==========================================
-# ==========================================
-# 1. POBIERANIE PREORDERÓW (GET)
-# ==========================================
+
 @app.get("/get_preorders")
 async def get_preorders():
     client = get_db_client()
     user_id = 1  
     
-    # DODANO await!
     games_res = await client.execute(
         "SELECT id, title, platform, release_date FROM games WHERE user_id = ?", 
         [user_id]
@@ -64,7 +55,6 @@ async def get_preorders():
     for game_row in games_res.rows:
         game_id, title, platform, release_date = game_row
         
-        # DODANO await!
         offers_res = await client.execute(
             "SELECT store_name, price, order_number, url FROM store_offers WHERE game_id = ?", 
             [game_id]
@@ -87,7 +77,7 @@ async def get_preorders():
             "offers": offers
         })
         
-    await client.close()  # DODANO await!
+    await client.close()
     return result
 
 
