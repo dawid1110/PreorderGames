@@ -32,7 +32,7 @@ def verify_password(password: str, stored_hash: str) -> bool:
 
 # Połączenie z bazą Turso (libsql)
 def get_db_client():
-    return libsql_client.create_client_async(
+    return libsql_client.create_client(
         url=os.getenv("LIBSQL_URL"),
         auth_token=os.getenv("LIBSQL_AUTH_TOKEN")
     )
