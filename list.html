@@ -3,40 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preorder Hub 🎮</title>
+    <title>Preorder Hub | Moja Lista</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Dekoracyjne tło -->
+    <!-- Tło -->
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
     <div class="container">
-        <header class="app-header">
-            <h1 class="gradient-text">Preorder Hub</h1>
-            <p class="subtitle">Zarządzaj swoimi zamówieniami w jednym miejscu</p>
-        </header>
-
-        <nav class="nav-back minimal-nav">
+        <!-- Pasek Nawigacji Powrotu -->
+        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
             <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Wróć
+                Wróć do Menu
             </a>
         </nav>
-        
-        <div id="games-container">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <p>Ładowanie danych z chmury...</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- Nowy układ: Siatka z paskiem bocznym -->
+        <header class="app-header">
+            <h1 class="gradient-text">Nadchodzące Premiery</h1>
+            <p class="subtitle">Śledź swoje zamówienia i kontroluj wydatki.</p>
+        </header>
+
+        <!-- NOWY UKŁAD: Siatka z paskiem bocznym -->
         <div class="list-layout">
             
-            <!-- Lewa kolumna: Gry -->
+            <!-- Lewa kolumna: Lista gier -->
             <div id="games-container">
                 <div class="loading-state">
                     <div class="spinner"></div>
@@ -44,7 +37,7 @@
                 </div>
             </div>
 
-            <!-- Prawa kolumna: Pasek boczny z podsumowaniem -->
+            <!-- Prawa kolumna: Tabelka z podsumowaniem (Sticky) -->
             <aside class="summary-sidebar">
                 <div class="summary-card" style="animation-delay: 0.2s;">
                     <div class="summary-header">
@@ -53,176 +46,169 @@
                     </div>
                     <p class="summary-subtitle">Najniższe prognozowane ceny</p>
                     <div id="monthly-summary">
-                        <p class="loading-text">Liczenie...</p>
+                        <!-- Tutaj wpadnie tabelka z JS -->
                     </div>
                 </div>
             </aside>
-            
-        </div>
-    
 
+        </div>
+    </div>
+
+    <!-- Logika aplikacji -->
     <script>
         fetch('https://preorder-api-pdjz.onrender.com/get_preorders')
             .then(response => {
-                if (!response.ok) throw new Error("Błąd podczas pobierania danych");
+                if (!response.ok) throw new Error('Błąd sieci');
                 return response.json();
             })
             .then(data => {
                 const container = document.getElementById('games-container');
+                const summaryContainer = document.getElementById('monthly-summary');
                 
+                // Jeśli brak gier w bazie
                 if (data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Brak preorderów w bazie.</div>';
+                    container.innerHTML = '<div class="empty-state">Brak preorderów w bazie. Dodaj nową grę!</div>';
+                    summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel bezpieczny!</p>';
                     return;
                 }
 
-                // --- LOGIKA PODSUMOWANIA WYDATKÓW ---
-                const summaryContainer = document.getElementById('monthly-summary');
-                
-                if (data.length === 0) {
-                    summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel jest bezpieczny!</p>';
-                } else {
-                    const monthlyCosts = {};
-                    let grandTotal = 0;
+                // ==========================================
+                // 1. LOGIKA PODSUMOWANIA WYDATKÓW (KOSZTORYS)
+                // ==========================================
+                const monthlyCosts = {};
+                let grandTotal = 0;
 
-                    data.forEach(game => {
-                        if (game.offers && game.offers.length > 0) {
-                            // 1. Znajdź najtańszą ofertę dla danej gry
-                            const cheapestPrice = Math.min(...game.offers.map(o => o.price));
-                            
-                            // 2. Wyciągnij rok i miesiąc z daty premiery (YYYY-MM-DD -> YYYY-MM)
-                            const monthKey = game.release_date.substring(0, 7); 
-                            
-                            // 3. Zainicjuj miesiąc w obiekcie, jeśli go tam nie ma
-                            if (!monthlyCosts[monthKey]) {
-                                // Zamieniamy "2026-10" na ładne polskie słowo "Październik 2026"
-                                const [year, month] = monthKey.split('-');
-                                const dateObj = new Date(year, parseInt(month) - 1, 1);
-                                const monthLabel = dateObj.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
-                                const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
-                                
-                                monthlyCosts[monthKey] = { label: capitalizedLabel, total: 0 };
-                            }
-                            
-                            // 4. Dodaj kwotę do miesiąca i do sumy całkowitej
-                            monthlyCosts[monthKey].total += cheapestPrice;
-                            grandTotal += cheapestPrice;
+                data.forEach(game => {
+                    if (game.offers && game.offers.length > 0) {
+                        // Szukamy najtańszej oferty
+                        const cheapestPrice = Math.min(...game.offers.map(o => o.price));
+                        
+                        // Ochrona przed różnymi formatami dat w bazie (DD.MM.YYYY vs YYYY-MM-DD)
+                        let year, month;
+                        if (game.release_date.includes('.')) {
+                            const parts = game.release_date.split('.');
+                            year = parts[2];
+                            month = parts[1];
+                        } else {
+                            const parts = game.release_date.split('-');
+                            year = parts[0];
+                            month = parts[1];
                         }
-                    });
+                        
+                        const monthKey = `${year}-${month}`; // np. "2026-10"
 
-                    // Sortujemy miesiące chronologicznie
-                    const sortedMonths = Object.keys(monthlyCosts).sort();
-                    
-                    // Budujemy kod HTML tabeli
-                    const tableRows = sortedMonths.map(key => `
-                        <tr>
-                            <td>${monthlyCosts[key].label}</td>
-                            <td class="amount">${monthlyCosts[key].total.toFixed(2)} zł</td>
-                        </tr>
+                        if (!monthlyCosts[monthKey]) {
+                            const dateObj = new Date(year, parseInt(month) - 1, 1);
+                            const monthLabel = dateObj.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+                            const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+                            monthlyCosts[monthKey] = { label: capitalizedLabel, total: 0 };
+                        }
+                        
+                        monthlyCosts[monthKey].total += cheapestPrice;
+                        grandTotal += cheapestPrice;
+                    }
+                });
+
+                const sortedMonths = Object.keys(monthlyCosts).sort();
+                const tableRows = sortedMonths.map(key => `
+                    <tr>
+                        <td>${monthlyCosts[key].label}</td>
+                        <td class="amount">${monthlyCosts[key].total.toFixed(2)} zł</td>
+                    </tr>
+                `).join('');
+
+                summaryContainer.innerHTML = `
+                    <table class="summary-table">
+                        <tbody>${tableRows}</tbody>
+                        <tfoot>
+                            <tr class="summary-total-row">
+                                <td>Razem</td>
+                                <td class="amount">${grandTotal.toFixed(2)} zł</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                `;
+
+                // ==========================================
+                // 2. GENEROWANIE KART GIER
+                // ==========================================
+                const cardsHtml = data.map((game, index) => {
+                    let offersHtml = game.offers.map(o => `
+                        <div class="offer-item">
+                            <span class="store-name">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                                ${o.store_name || o.store}
+                            </span>
+                            <div class="offer-right">
+                                <span class="price">${o.price.toFixed(2)} zł</span>
+                                <a href="${o.url || '#'}" target="_blank" class="btn-store">Do oferty</a>
+                            </div>
+                        </div>
                     `).join('');
 
-                    summaryContainer.innerHTML = `
-                        <table class="summary-table">
-                            <tbody>
-                                ${tableRows}
-                            </tbody>
-                            <tfoot>
-                                <tr class="summary-total-row">
-                                    <td>Razem</td>
-                                    <td class="amount">${grandTotal.toFixed(2)} zł</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    let encodedTitle = encodeURIComponent(game.title);
+
+                    return `
+                        <div class="game-card" style="animation-delay: ${index * 0.1}s">
+                            <div class="card-header">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
+                                    <span class="release-date">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        ${game.release_date}
+                                    </span>
+                                </div>
+                                
+                                <button class="btn-delete-game" onclick="deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </div>
+                            <h2 class="game-title">${game.title}</h2>
+                            <div class="offers-list">
+                                ${offersHtml}
+                            </div>
+                        </div>
                     `;
-                }
-                // --- KONIEC LOGIKI PODSUMOWANIA ---
-                
-                // Budujemy kod HTML dla wszystkich gier naraz (szybsze renderowanie)
-                const cardsHtml = data.map((game, index) => {
-    // Generujemy oferty z zabezpieczeniem nazwy (store_name lub store)
-    let offersHtml = game.offers.map(o => `
-        <div class="offer-item">
-            <span class="store-name">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                ${o.store_name || o.store}
-            </span>
-            <div class="offer-right">
-                <span class="price">${o.price.toFixed(2)} zł</span>
-                <a href="${o.url || '#'}" target="_blank" class="btn-store">Do oferty</a>
-            </div>
-        </div>
-    `).join('');
+                }).join('');
 
-    // UWAGA: Zabezpieczamy tytuł gry (kodujemy spacje i znaki specjalne) przed przekazaniem do przycisku
-    let encodedTitle = encodeURIComponent(game.title);
-
-    // Zwracamy gotową kartę z lekkim opóźnieniem animacji (kaskada)
-    return `
-        <div class="game-card" style="animation-delay: ${index * 0.1}s">
-            <div class="card-header">
-                
-                <!-- LEWA STRONA NAGŁÓWKA: Platforma i Data -->
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
-                    <span class="release-date">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        ${game.release_date}
-                    </span>
-                </div>
-
-                <!-- PRAWA STRONA NAGŁÓWKA: Przycisk kosza -->
-                <button class="btn-delete-game" onclick="deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                </button>
-
-            </div>
-            <h2 class="game-title">${game.title}</h2>
-            <div class="offers-list">
-                ${offersHtml}
-            </div>
-        </div>
-    `;
-}).join('');
-
-                // Wrzucamy wszystko w siatkę (Grid)
+                // Wstawiamy karty do HTML - dopiero tutaj znika "Ładowanie..."
                 container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
             })
             .catch(error => {
-                console.error('Błąd:', error);
+                console.error('Błąd pobierania danych:', error);
                 document.getElementById('games-container').innerHTML = `
                     <div class="error-state">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        <p>Nie udało się połączyć z serwerem. Sprawdź backend na Renderze!</p>
-                    </div>`;
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="margin-bottom: 16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        <h3>Nie udało się załadować danych.</h3>
+                        <p>Upewnij się, że serwer na Render.com jest aktywny.</p>
+                    </div>
+                `;
             });
 
-            async function deleteGame(title, platform) {
-    // Okienko potwierdzenia
-    const isConfirmed = confirm(`Czy na pewno chcesz usunąć grę "${title}" na ${platform} ze swojej listy?`);
-    
-    if (!isConfirmed) return; // Jeśli użytkownik kliknie "Anuluj", przerywamy
+        // ==========================================
+        // 3. FUNKCJA USUWANIA GRY
+        // ==========================================
+        async function deleteGame(title, platform) {
+            const isConfirmed = confirm(`Czy na pewno chcesz usunąć grę "${title}" na ${platform}?`);
+            if (!isConfirmed) return;
 
-    try {
-        const response = await fetch('https://preorder-api-pdjz.onrender.com/delete', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                title: title, 
-                platform: platform 
-            })
-        });
+            try {
+                const response = await fetch('https://preorder-api-pdjz.onrender.com/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, platform: platform })
+                });
 
-        if (response.ok) {
-            // Jeśli się udało, odświeżamy stronę, żeby pobrać nową, krótszą listę z API!
-            window.location.reload();
-        } else {
-            alert("Nie udało się usunąć gry. Sprawdź logi na serwerze.");
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Nie udało się usunąć gry.");
+                }
+            } catch (error) {
+                console.error("Błąd usuwania:", error);
+                alert("Wystąpił problem z połączeniem z API.");
+            }
         }
-    } catch (error) {
-        console.error("Błąd usuwania:", error);
-        alert("Wystąpił problem z połączeniem z API.");
-    }
-}
     </script>
-
 </body>
 </html>
