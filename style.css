@@ -202,24 +202,36 @@ body.minimal-dark { background-color: #09090b; color: #ededed; }
 }
 
 /* ====================================================
-   UKŁAD STRONY: LISTA GIER + PANEL BOCZNY (KOSZTY)
+   UKŁAD STRONY: PŁYWAJĄCY PANEL KOSZTÓW
    ==================================================== */
 .list-layout {
-    display: grid;
-    grid-template-columns: 1fr 340px; /* Lewa kolumna elastyczna, prawa na sztywno 340px */
-    gap: 30px;
-    align-items: start; /* Kluczowe dla pozycji sticky! */
+    display: block; /* Oddajemy 100% szerokości dla siatki z grami! */
 }
 
-/* Karta Podsumowania (Sticky) */
+/* Pływający kontener boczny */
+.summary-sidebar {
+    position: fixed;
+    right: 30px;
+    bottom: 30px; /* Przyklejamy do prawego dolnego rogu */
+    z-index: 1000;
+    width: 320px;
+    pointer-events: none; /* Przepuszcza kliknięcia w puste miejsca... */
+}
+
+/* Sama Karta Podsumowania */
 .summary-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--card-border);
+    pointer-events: auto; /* ...ale karta łapie kliknięcia i scrolla */
+    background: rgba(18, 18, 20, 0.85); /* Nieco mocniejsze tło, żeby teksty z gier pod spodem nie prześwitywały */
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 24px;
-    position: sticky;
-    top: 30px; /* Odstęp od góry ekranu przy scrollowaniu */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(168, 85, 247, 0.1); /* Delikatna fioletowa poświata na krawędzi */
+    
+    /* Zabezpieczenie przed zbyt długą listą miesięcy */
+    max-height: 60vh; 
+    overflow-y: auto; 
+    
     opacity: 0;
     animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -261,7 +273,7 @@ body.minimal-dark { background-color: #09090b; color: #ededed; }
 .summary-table td.amount {
     text-align: right;
     font-weight: 600;
-    color: #38bdf8; /* Jasny błękit dla wydatków */
+    color: #38bdf8;
 }
 
 /* Wiersz z podsumowaniem całkowitym */
@@ -274,17 +286,28 @@ body.minimal-dark { background-color: #09090b; color: #ededed; }
 }
 
 .summary-total-row td.amount {
-    color: var(--success); /* Zielony dla kwoty całkowitej */
+    color: var(--success);
 }
 
-/* Responsywność - na telefonach sidebar ląduje na górze! */
+/* Subtelny Scrollbar wewnątrz tabelki */
+.summary-card::-webkit-scrollbar {
+    width: 6px;
+}
+.summary-card::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+/* Responsywność - na telefonach sidebar wraca na górę jako standardowy blok */
 @media (max-width: 960px) {
-    .list-layout {
-        grid-template-columns: 1fr; /* Na telefonach wszystko w jednej kolumnie */
+    .summary-sidebar {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        margin-bottom: 30px;
     }
     .summary-card {
-        position: static;
-        order: -1; /* Przerzuca tabelkę na samą górę nad grami */
-        margin-bottom: 20px;
+        max-height: none;
     }
 }
