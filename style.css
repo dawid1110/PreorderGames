@@ -1,6 +1,19 @@
 /* ====================================================
    1. ZMIENNE GLOBALNE I BAZA
    ==================================================== */
+/* Globalne resetowanie i blokada szerokości na telefonach */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
 :root {
     --bg-main: #09090b;
     --card-bg: rgba(24, 24, 27, 0.6);
