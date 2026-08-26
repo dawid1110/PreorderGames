@@ -7,92 +7,143 @@
     <link rel="stylesheet" href="style.css">
     <style>
         .form-card {
-            background: rgba(24, 24, 27, 0.7);
+            background: rgba(24, 24, 27, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 32px;
-            backdrop-filter: blur(10px);
-            margin-top: 20px;
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            margin-top: 24px;
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         .form-group label {
             display: block;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 500;
             color: #a1a1aa;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .form-group input, .form-group select {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(9, 9, 11, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            padding: 14px 18px;
+            background: rgba(9, 9, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
             color: #ffffff;
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
         .form-group input:focus, .form-group select:focus {
             border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+            background: rgba(9, 9, 11, 0.95);
         }
-        .offer-row {
+        
+        /* Styl wiersza oferty jako nowoczesny kafel */
+        .offer-card-row {
+            background: rgba(39, 39, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+        .offer-card-row:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .offer-grid {
             display: grid;
-            grid-template-columns: 1.5fr 1fr 1.2fr 2fr auto;
-            gap: 10px;
+            grid-template-columns: 2fr 1fr 1.5fr 2fr auto;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        @media (max-width: 768px) {
-            .offer-row {
+        @media (max-width: 900px) {
+            .offer-grid {
                 grid-template-columns: 1fr;
             }
         }
+        
         .btn-add-offer {
-            background: rgba(168, 85, 247, 0.15);
+            width: 100%;
+            background: rgba(168, 85, 247, 0.1);
             color: #a855f7;
-            border: 1px solid rgba(168, 85, 247, 0.3);
-            padding: 10px 16px;
-            border-radius: 8px;
+            border: 1px dashed rgba(168, 85, 247, 0.4);
+            padding: 14px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+            margin-bottom: 30px;
         }
         .btn-add-offer:hover {
-            background: rgba(168, 85, 247, 0.25);
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+            transform: translateY(-1px);
         }
+        
         .btn-remove-offer {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.1);
             color: #ef4444;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
+        .btn-remove-offer:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+        }
+        
         .btn-submit {
             width: 100%;
-            padding: 14px;
-            background: #a855f7;
+            padding: 16px;
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 12px;
+            font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 20px;
+            box-shadow: 0 10px 20px -5px rgba(168, 85, 247, 0.4);
+            transition: all 0.2s ease;
         }
         .btn-submit:hover {
-            background: #9333ea;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(168, 85, 247, 0.6);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -101,8 +152,8 @@
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
-    <div class="container" style="max-width: 800px;">
-        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
+    <div class="container" style="max-width: 850px; padding-top: 40px; padding-bottom: 60px;">
+        <nav class="nav-back minimal-nav" style="margin-bottom: 24px;">
             <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 Wróć do Menu
@@ -111,11 +162,17 @@
 
         <header class="app-header">
             <h1 class="gradient-text">Dodaj Nowy Preorder</h1>
-            <p class="subtitle">Wprowadź dane gry oraz oferty z różnych sklepów.</p>
+            <p class="subtitle">Wprowadź dane gry oraz oferty z różnych sklepów do porównania.</p>
         </header>
 
         <div class="form-card">
             <form id="add-form">
+                
+                <div class="form-section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
+                    Informacje o grze
+                </div>
+
                 <div class="form-group">
                     <label>Tytuł gry</label>
                     <input type="text" id="title" required placeholder="np. Grand Theft Auto VI">
@@ -125,61 +182,81 @@
                     <div class="form-group">
                         <label>Platforma</label>
                         <select id="platform" required>
-                            <option value="PS5">PS5</option>
+                            <option value="PS5">PlayStation 5</option>
                             <option value="Xbox">Xbox Series X/S</option>
-                            <option value="NS2">Switch 2 / NS</option>
+                            <option value="NS2">Nintendo Switch 2 / NS</option>
                             <option value="PC">PC</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Data premiery (np. YYYY-MM-DD lub DD.MM.YYYY)</label>
-                        <input type="text" id="release_date" required placeholder="2026-11-19">
+                        <label>Data premiery</label>
+                        <input type="text" id="release_date" required placeholder="np. 2026-11-19">
                     </div>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 30px 0;">
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0;">
 
-                <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: #fff;">Oferty sklepowe</h3>
-                <div id="offers-container">
-                    <!-- Tutaj dynamicznie wskakują wiersze ofert -->
+                <div class="form-section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    Oferty sklepowe
                 </div>
 
-                <button type="button" class="btn-add-offer" onclick="addOfferRow()">+ Dodaj kolejny sklep</button>
+                <div id="offers-container">
+                    <!-- Dynamiczne wiersze ofert -->
+                </div>
 
-                <button type="submit" class="btn-submit">Zapisz Preorder</button>
+                <button type="button" class="btn-add-offer" onclick="addOfferRow()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Dodaj kolejny sklep
+                </button>
+
+                <button type="submit" class="btn-submit">Zapisz Preorder w chmurze</button>
             </form>
         </div>
     </div>
 
     <script>
-        // 1. Sprawdzenie sesji
         const userId = localStorage.getItem('user_id');
         if (!userId) {
             window.location.href = 'login.html';
         }
 
-        // 2. Dodawanie wiersza oferty
         function addOfferRow() {
             const container = document.getElementById('offers-container');
             const row = document.createElement('div');
-            row.className = 'offer-row';
+            row.className = 'offer-card-row';
             row.innerHTML = `
-                <input type="text" class="offer-store" placeholder="Nazwa sklepu (np. Ultima)" required>
-                <input type="number" step="0.01" class="offer-price" placeholder="Cena (zł)" required>
-                <input type="text" class="offer-order" placeholder="Nr zamówienia (opcjonalnie)">
-                <input type="url" class="offer-url" placeholder="Link do oferty (opcjonalnie)">
-                <button type="button" class="btn-remove-offer" onclick="this.parentElement.remove()" title="Usuń sklep">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <div class="offer-grid">
+                    <div>
+                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Sklep</label>
+                        <input type="text" class="offer-store" placeholder="np. Ultima" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Cena (zł)</label>
+                        <input type="number" step="0.01" class="offer-price" placeholder="249.90" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Nr zamówienia</label>
+                        <input type="text" class="offer-order" placeholder="Opcjonalnie">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Link do oferty</label>
+                        <input type="url" class="offer-url" placeholder="https://...">
+                    </div>
+                    <div style="display: flex; align-items: flex-end; height: 100%;">
+                        <button type="button" class="btn-remove-offer" onclick="this.closest('.offer-card-row').remove()" title="Usuń sklep">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
             `;
             container.appendChild(row);
         }
 
-        // Dodaj domyślnie jeden wiersz na start
+        // Domyślnie dodaj jeden sklep na start
         addOfferRow();
 
-        // 3. Obsługa wysyłania formularza
         document.getElementById('add-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -187,7 +264,7 @@
             const platform = document.getElementById('platform').value;
             const release_date = document.getElementById('release_date').value.trim();
 
-            const offerRows = document.querySelectorAll('.offer-row');
+            const offerRows = document.querySelectorAll('.offer-card-row');
             const offers = [];
 
             offerRows.forEach(row => {
