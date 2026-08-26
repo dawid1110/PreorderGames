@@ -157,3 +157,43 @@ async def delete_preorder(game_to_delete: DeleteGameRequest):
     
     await client.close()
     return {"message": "Preorder został usunięty z bazy!"}
+
+@app.post("/move_to_collection")
+async def move_to_collection(data: dict):
+    title = data.get("title")
+    platform = data.get("platform")
+    user_id = 1  # Domyślny użytkownik
+    
+    client = get_db_client()
+    
+    try:
+        # 1. Znajdujemy grę w tabeli games
+        game_res = await client.execute(
+            "SELECT id, release_date FROM games WHERE title = ? AND platform = ? AND user_id = ?",
+            [title, platform, user_id]
+        )
+        
+        if not game_res.rows:
+            await client.close()
+            raise HTTPException(status_code=404, detail="Gra nie została znaleziona w preorderach.")
+            
+        game_id, release_date = game_res.rows[0]
+        
+        # 2. Przenosimy (wstawiamy) do tabeli collections
+        await client.execute(
+            "INSERT INTO collections (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
+            [user_id, title, platform, release_date]
+        )
+        
+        # 3. Usuwamy powiązane oferty z store_offers (wymóg klucza obcego)
+        await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
+        
+        # 4. Usuwamy grę z tabeli games
+        await client.execute("DELETE FROM games WHERE id = ?", [game_id])
+        
+        await client.close()
+        return {"status": "success", "message": "Gra została przeniesiona do kolekcji!"}
+        
+    except Exception as e:
+        await client.close()
+        raise HTTPException(status_code=500, detail=str(e))

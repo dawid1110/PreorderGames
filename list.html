@@ -46,6 +46,23 @@
         .game-card.expanded .expand-icon {
             transform: rotate(180deg);
         }
+        /* Styl dla przycisku przenoszenia do kolekcji */
+        .btn-collect-game {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .btn-collect-game:hover {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e; /* Przyjemna zieleń oznaczająca sukces/kolekcję */
+        }
     </style>
 </head>
 <body>
@@ -210,13 +227,15 @@
                                     </span>
                                 </div>
                                 
-                                <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Odbierz i przenieś do kolekcji">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    </button>
                                     <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                     </button>
                                     <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
-                            </div>
                             
                             <h2 class="game-title" style="margin-bottom: 4px;">${game.title}</h2>
                             
@@ -275,6 +294,27 @@
                 }
             } catch (error) {
                 console.error("Błąd usuwania:", error);
+                alert("Wystąpił problem z połączeniem z API.");
+            }
+        }
+        async function moveToCollection(title, platform) {
+            const isConfirmed = confirm(`Odebrałeś preorder "${title}" (${platform})? Gra zostanie przeniesiona do Twojej kolekcji.`);
+            if (!isConfirmed) return;
+
+            try {
+                const response = await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, platform: platform })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert("Nie udało się przenieść gry do kolekcji.");
+                }
+            } catch (error) {
+                console.error("Błąd przenoszenia:", error);
                 alert("Wystąpił problem z połączeniem z API.");
             }
         }
