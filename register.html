@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preorder Hub | Rejestracja</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-card {
+            background: rgba(24, 24, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(9, 9, 11, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: #a855f7;
+        }
+        .btn-auth {
+            width: 100%;
+            padding: 12px;
+            background: #a855f7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-auth:hover {
+            background: #9333ea;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+        }
+        .auth-footer a {
+            color: #a855f7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+        .success-msg {
+            color: #22c55e;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;">
+
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="auth-card">
+        <header style="text-align: center; margin-bottom: 30px;">
+            <h1 class="gradient-text" style="font-size: 2rem; margin-bottom: 8px;">Utwórz konto</h1>
+            <p style="color: #a1a1aa; font-size: 0.9rem;">Dołącz do Preorder Huba</p>
+        </header>
+
+        <div id="error-box" class="error-msg"></div>
+        <div id="success-box" class="success-msg"></div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label>Nazwa użytkownika</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Hasło</label>
+                <input type="password" id="password" required autocomplete="new-password">
+            </div>
+            <button type="submit" class="btn-auth">Zarejestruj się</button>
+        </form>
+
+        <div class="auth-footer">
+            Masz już konto? <a href="login.html">Zaloguj się</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('error-box');
+            const successBox = document.getElementById('success-box');
+
+            errorBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            try {
+                const response = await fetch('https://preorder-api-pdjz.onrender.com/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    successBox.textContent = 'Konto utworzone! Za chwilę nastąpi przekierowanie...';
+                    successBox.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } else {
+                    errorBox.textContent = data.detail || 'Błąd rejestracji.';
+                    errorBox.style.display = 'block';
+                }
+            } catch (err) {
+                errorBox.textContent = 'Problem z połączeniem z serwerem.';
+                errorBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
