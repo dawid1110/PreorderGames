@@ -21,21 +21,22 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .form-section-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
+            letter-spacing: 0.02em;
         }
         .form-group {
             margin-bottom: 24px;
         }
         .form-group label {
             display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.8rem;
+            font-weight: 600;
             color: #a1a1aa;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -58,36 +59,58 @@
             background: rgba(9, 9, 11, 0.95);
         }
         
-        /* Styl wiersza oferty jako nowoczesny kafel */
-        .offer-card-row {
-            background: rgba(39, 39, 42, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 16px;
-            position: relative;
-            transition: border-color 0.2s;
-        }
-        .offer-card-row:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-        .offer-grid {
+        /* Spójny wiersz oferty */
+        .offer-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 2fr auto;
+            grid-template-columns: 1.8fr 1fr 1.5fr 2fr 44px;
             gap: 12px;
             align-items: center;
+            margin-bottom: 14px;
         }
-        @media (max-width: 900px) {
-            .offer-grid {
+        @media (max-width: 950px) {
+            .offer-row {
                 grid-template-columns: 1fr;
+                background: rgba(9, 9, 11, 0.4);
+                padding: 16px;
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
             }
+        }
+
+        .offer-input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #a1a1aa;
+            margin-bottom: 6px;
+        }
+        @media (min-width: 951px) {
+            .offer-input-group label {
+                display: none; /* Na dużych ekranach etykiety są nad pierwszą linią */
+            }
+        }
+
+        .offer-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(9, 9, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .offer-input:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
         }
         
         .btn-add-offer {
             width: 100%;
-            background: rgba(168, 85, 247, 0.1);
+            background: rgba(168, 85, 247, 0.08);
             color: #a855f7;
-            border: 1px dashed rgba(168, 85, 247, 0.4);
+            border: 1px dashed rgba(168, 85, 247, 0.35);
             padding: 14px;
             border-radius: 12px;
             cursor: pointer;
@@ -98,27 +121,27 @@
             justify-content: center;
             gap: 8px;
             transition: all 0.2s ease;
-            margin-top: 10px;
-            margin-bottom: 30px;
+            margin-top: 12px;
+            margin-bottom: 32px;
         }
         .btn-add-offer:hover {
-            background: rgba(168, 85, 247, 0.2);
+            background: rgba(168, 85, 247, 0.15);
             border-color: #a855f7;
-            transform: translateY(-1px);
         }
         
         .btn-remove-offer {
             background: rgba(239, 68, 68, 0.1);
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.2);
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            justify-self: center;
         }
         .btn-remove-offer:hover {
             background: rgba(239, 68, 68, 0.25);
@@ -142,9 +165,6 @@
             transform: translateY(-2px);
             box-shadow: 0 15px 25px -5px rgba(168, 85, 247, 0.6);
         }
-        .btn-submit:active {
-            transform: translateY(0);
-        }
     </style>
 </head>
 <body>
@@ -152,7 +172,7 @@
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
-    <div class="container" style="max-width: 850px; padding-top: 40px; padding-bottom: 60px;">
+    <div class="container" style="max-width: 900px; padding-top: 40px; padding-bottom: 60px;">
         <nav class="nav-back minimal-nav" style="margin-bottom: 24px;">
             <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -169,7 +189,7 @@
             <form id="add-form">
                 
                 <div class="form-section-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg>
                     Informacje o grze
                 </div>
 
@@ -197,9 +217,20 @@
 
                 <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0;">
 
-                <div class="form-section-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                    Oferty sklepowe
+                <div class="form-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="display: flex; align-items: center; gap: 10px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        Oferty sklepowe
+                    </span>
+                </div>
+
+                <!-- Nagłówki kolumn dla dużych ekranów -->
+                <div style="display: grid; grid-template-columns: 1.8fr 1fr 1.5fr 2fr 44px; gap: 12px; margin-bottom: 8px; padding: 0 4px;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #71717a; text-transform: uppercase;">Sklep</span>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #71717a; text-transform: uppercase;">Cena (zł)</span>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #71717a; text-transform: uppercase;">Nr zamówienia</span>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #71717a; text-transform: uppercase;">Link do oferty</span>
+                    <span></span>
                 </div>
 
                 <div id="offers-container">
@@ -225,31 +256,27 @@
         function addOfferRow() {
             const container = document.getElementById('offers-container');
             const row = document.createElement('div');
-            row.className = 'offer-card-row';
+            row.className = 'offer-row';
             row.innerHTML = `
-                <div class="offer-grid">
-                    <div>
-                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Sklep</label>
-                        <input type="text" class="offer-store" placeholder="np. Ultima" required>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Cena (zł)</label>
-                        <input type="number" step="0.01" class="offer-price" placeholder="249.90" required>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Nr zamówienia</label>
-                        <input type="text" class="offer-order" placeholder="Opcjonalnie">
-                    </div>
-                    <div>
-                        <label style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 4px; display: block;">Link do oferty</label>
-                        <input type="url" class="offer-url" placeholder="https://...">
-                    </div>
-                    <div style="display: flex; align-items: flex-end; height: 100%;">
-                        <button type="button" class="btn-remove-offer" onclick="this.closest('.offer-card-row').remove()" title="Usuń sklep">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
+                <div class="offer-input-group">
+                    <label>Sklep</label>
+                    <input type="text" class="offer-store offer-input" placeholder="np. Ultima" required>
                 </div>
+                <div class="offer-input-group">
+                    <label>Cena (zł)</label>
+                    <input type="number" step="0.01" class="offer-price offer-input" placeholder="249.90" required>
+                </div>
+                <div class="offer-input-group">
+                    <label>Nr zamówienia</label>
+                    <input type="text" class="offer-order offer-input" placeholder="Opcjonalnie">
+                </div>
+                <div class="offer-input-group">
+                    <label>Link do oferty</label>
+                    <input type="url" class="offer-url offer-input" placeholder="https://...">
+                </div>
+                <button type="button" class="btn-remove-offer" onclick="this.closest('.offer-row').remove()" title="Usuń sklep">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
             `;
             container.appendChild(row);
         }
@@ -264,7 +291,7 @@
             const platform = document.getElementById('platform').value;
             const release_date = document.getElementById('release_date').value.trim();
 
-            const offerRows = document.querySelectorAll('.offer-card-row');
+            const offerRows = document.querySelectorAll('.offer-row');
             const offers = [];
 
             offerRows.forEach(row => {
