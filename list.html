@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preorder Hub | Moja Lista</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dodatkowe style dla akordeonu i podglądu na zwiniętej karcie */
+        .game-card {
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .game-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        .card-preview-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+        }
+        .preview-price {
+            color: #a855f7;
+            font-weight: 600;
+        }
+        /* Ukrywanie/rozwijanie ofert */
+        .offers-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .game-card.expanded .offers-wrapper {
+            max-height: 500px; /* Wystarczająco dużo, aby pomieścić oferty */
+            opacity: 1;
+            margin-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 16px;
+        }
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        .game-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
 <body>
 
@@ -65,7 +107,6 @@
                 const container = document.getElementById('games-container');
                 const summaryContainer = document.getElementById('monthly-summary');
                 
-                // Jeśli brak gier w bazie
                 if (data.length === 0) {
                     container.innerHTML = '<div class="empty-state">Brak preorderów w bazie. Dodaj nową grę!</div>';
                     summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel bezpieczny!</p>';
@@ -80,10 +121,8 @@
 
                 data.forEach(game => {
                     if (game.offers && game.offers.length > 0) {
-                        // Szukamy najtańszej oferty
                         const cheapestPrice = Math.min(...game.offers.map(o => o.price));
                         
-                        // Ochrona przed różnymi formatami dat w bazie (DD.MM.YYYY vs YYYY-MM-DD)
                         let year, month;
                         if (game.release_date.includes('.')) {
                             const parts = game.release_date.split('.');
@@ -95,7 +134,7 @@
                             month = parts[1];
                         }
                         
-                        const monthKey = `${year}-${month}`; // np. "2026-10"
+                        const monthKey = `${year}-${month}`;
 
                         if (!monthlyCosts[monthKey]) {
                             const dateObj = new Date(year, parseInt(month) - 1, 1);
@@ -130,16 +169,17 @@
                 `;
 
                 // ==========================================
-                // 2. GENEROWANIE KART GIER
+                // 2. GENEROWANIE ROZWIJANYCH KART GIER
                 // ==========================================
                 const cardsHtml = data.map((game, index) => {
+                    const cheapestPrice = game.offers && game.offers.length > 0 
+                        ? Math.min(...game.offers.map(o => o.price)) 
+                        : 0;
+
                     let offersHtml = game.offers.map(o => {
-                        // Sprawdzamy czy numer zamówienia istnieje (obsługa obu wariantów nazwy klucza)
                         const orderNum = o.orderNumber || o.order_number;
-                        
-                        // Tworzymy ładną etykietę tylko wtedy, gdy numer zamówienia jest podany
                         const orderBadgeHtml = orderNum 
-                            ? `<span class="order-badge" style="font-size: 1rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
+                            ? `<span class="order-badge" style="font-size: 0.75rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
                             : '';
 
                         return `
@@ -151,7 +191,7 @@
                                 </span>
                                 <div class="offer-right">
                                     <span class="price">${o.price.toFixed(2)} zł</span>
-                                    <a href="${o.url || '#'}" target="_blank" class="btn-store">Do oferty</a>
+                                    <a href="${o.url || '#'}" target="_blank" class="btn-store" onclick="event.stopPropagation()">Do oferty</a>
                                 </div>
                             </div>
                         `;
@@ -160,7 +200,7 @@
                     let encodedTitle = encodeURIComponent(game.title);
 
                     return `
-                        <div class="game-card" style="animation-delay: ${index * 0.1}s">
+                        <div class="game-card" style="animation-delay: ${index * 0.1}s" onclick="toggleCard(this)">
                             <div class="card-header">
                                 <div style="display: flex; gap: 10px; align-items: center;">
                                     <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
@@ -170,19 +210,30 @@
                                     </span>
                                 </div>
                                 
-                                <button class="btn-delete-game" onclick="deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                                </button>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    </button>
+                                    <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </div>
                             </div>
-                            <h2 class="game-title">${game.title}</h2>
-                            <div class="offers-list">
-                                ${offersHtml}
+                            
+                            <h2 class="game-title" style="margin-bottom: 4px;">${game.title}</h2>
+                            
+                            <div class="card-preview-info">
+                                <span>Liczba ofert: ${game.offers.length}</span>
+                                <span class="preview-price">Od ${cheapestPrice.toFixed(2)} zł</span>
+                            </div>
+
+                            <div class="offers-wrapper">
+                                <div class="offers-list">
+                                    ${offersHtml}
+                                </div>
                             </div>
                         </div>
                     `;
                 }).join('');
 
-                // Wstawiamy karty do HTML - dopiero tutaj znika "Ładowanie..."
                 container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
             })
             .catch(error => {
@@ -197,7 +248,14 @@
             });
 
         // ==========================================
-        // 3. FUNKCJA USUWANIA GRY
+        // 3. FUNKCJA ROZWIJANIA/ZWRIJANIA KARTY
+        // ==========================================
+        function toggleCard(cardElement) {
+            cardElement.classList.toggle('expanded');
+        }
+
+        // ==========================================
+        // 4. FUNKCJA USUWANIA GRY
         // ==========================================
         async function deleteGame(title, platform) {
             const isConfirmed = confirm(`Czy na pewno chcesz usunąć grę "${title}" na ${platform}?`);
