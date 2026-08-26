@@ -10,6 +10,14 @@ authToken = os.getenv("TURSO_AUTH_TOKEN")
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Pozwala na zapytania z każdej strony (do testów idealne)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 def get_db_client():
     return libsql_client.create_client(url=url, auth_token=authToken)
 
