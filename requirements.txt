@@ -80,6 +80,7 @@ notebook_shim==0.2.4
 packaging==26.0
 pandocfilters==1.5.1
 parso==0.8.6
+passlib==1.7.4
 pexpect==4.9.0
 platformdirs==4.9.4
 prometheus_client==0.24.1
