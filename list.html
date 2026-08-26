@@ -92,7 +92,7 @@
                     <!-- Wyszukiwarka tekstowa -->
                     <div style="position: relative; width: 100%;">
                         <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #71717a;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="search-input" placeholder="Szukaj gry lub sklepu..." style="width: 100%; padding: 12px 16px 12px 42px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-size: 0.95rem; outline: none; transition: all 0.2s;">
+                        <input type="text" id="search-input" placeholder="Szukaj gry, sklepu lub numeru zamówienia..." style="width: 100%; padding: 12px 16px 12px 42px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-size: 0.95rem; outline: none; transition: all 0.2s;">
                     </div>
 
                     <!-- Przyciski filtrowania po platformie -->
@@ -225,7 +225,7 @@
                     : 0;
 
                 let offersHtml = game.offers.map(o => {
-                    const orderNum = o.orderNumber || o.order_number;
+                    const orderNum = o.order_number || o.orderNumber || o.order;
                     const orderBadgeHtml = orderNum 
                         ? `<span class="order-badge" style="font-size: 0.75rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
                         : '';
@@ -288,14 +288,19 @@
             container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
         }
 
-        // Obsługa filtrów i wyszukiwania
+        // Obsługa filtrów i wyszukiwania (uwzględniająca tytuł, sklep oraz numer zamówienia)
         function applyFilters() {
             const searchText = document.getElementById('search-input').value.toLowerCase();
 
             const filtered = allPreorders.filter(game => {
                 const matchesPlatform = currentPlatformFilter === 'ALL' || game.platform === currentPlatformFilter;
+                
                 const matchesSearch = game.title.toLowerCase().includes(searchText) || 
-                    (game.offers && game.offers.some(o => (o.store_name || o.store).toLowerCase().includes(searchText)));
+                    (game.offers && game.offers.some(o => {
+                        const storeName = (o.store_name || o.store || '').toLowerCase();
+                        const orderNum = String(o.order_number || o.orderNumber || o.order || '').toLowerCase();
+                        return storeName.includes(searchText) || orderNum.includes(searchText);
+                    }));
 
                 return matchesPlatform && matchesSearch;
             });
