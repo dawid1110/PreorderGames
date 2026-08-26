@@ -10,7 +10,10 @@ app = FastAPI()
 # Konfiguracja CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://preordergames.dwiad1110.pages.dev", 
+        "http://localhost:5500" # Zostaw do testów u siebie na komputerze
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
