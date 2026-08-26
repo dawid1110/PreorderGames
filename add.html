@@ -5,9 +5,152 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preorder Hub | Dodaj Grę</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .form-card {
+            background: rgba(24, 24, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            margin-bottom: 8px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(9, 9, 11, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #a855f7;
+        }
+        .offer-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1.2fr 2fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        @media (max-width: 768px) {
+            .offer-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .btn-add-offer {
+            background: rgba(168, 85, 247, 0.15);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            margin-bottom: 20px;
+        }
+        .btn-add-offer:hover {
+            background: rgba(168, 85, 247, 0.25);
+        }
+        .btn-remove-offer {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #a855f7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+        .btn-submit:hover {
+            background: #9333ea;
+        }
+    </style>
 </head>
 <body>
-    <!-- Treść formularza pozostaje bez zmian, kluczowy jest skrypt poniżej -->
+
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="container" style="max-width: 800px;">
+        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
+            <a href="index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Wróć do Menu
+            </a>
+        </nav>
+
+        <header class="app-header">
+            <h1 class="gradient-text">Dodaj Nowy Preorder</h1>
+            <p class="subtitle">Wprowadź dane gry oraz oferty z różnych sklepów.</p>
+        </header>
+
+        <div class="form-card">
+            <form id="add-form">
+                <div class="form-group">
+                    <label>Tytuł gry</label>
+                    <input type="text" id="title" required placeholder="np. Grand Theft Auto VI">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>Platforma</label>
+                        <select id="platform" required>
+                            <option value="PS5">PS5</option>
+                            <option value="Xbox">Xbox Series X/S</option>
+                            <option value="NS2">Switch 2 / NS</option>
+                            <option value="PC">PC</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data premiery (np. YYYY-MM-DD lub DD.MM.YYYY)</label>
+                        <input type="text" id="release_date" required placeholder="2026-11-19">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 30px 0;">
+
+                <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: #fff;">Oferty sklepowe</h3>
+                <div id="offers-container">
+                    <!-- Tutaj dynamicznie wskakują wiersze ofert -->
+                </div>
+
+                <button type="button" class="btn-add-offer" onclick="addOfferRow()">+ Dodaj kolejny sklep</button>
+
+                <button type="submit" class="btn-submit">Zapisz Preorder</button>
+            </form>
+        </div>
+    </div>
 
     <script>
         // 1. Sprawdzenie sesji
@@ -16,34 +159,77 @@
             window.location.href = 'login.html';
         }
 
-        // 2. Obsługa wysyłania formularza
+        // 2. Dodawanie wiersza oferty
+        function addOfferRow() {
+            const container = document.getElementById('offers-container');
+            const row = document.createElement('div');
+            row.className = 'offer-row';
+            row.innerHTML = `
+                <input type="text" class="offer-store" placeholder="Nazwa sklepu (np. Ultima)" required>
+                <input type="number" step="0.01" class="offer-price" placeholder="Cena (zł)" required>
+                <input type="text" class="offer-order" placeholder="Nr zamówienia (opcjonalnie)">
+                <input type="url" class="offer-url" placeholder="Link do oferty (opcjonalnie)">
+                <button type="button" class="btn-remove-offer" onclick="this.parentElement.remove()" title="Usuń sklep">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Dodaj domyślnie jeden wiersz na start
+        addOfferRow();
+
+        // 3. Obsługa wysyłania formularza
         document.getElementById('add-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Zbierz dane formularza i oferty...
-            const formData = {
-                user_id: parseInt(userId), // Przekazujemy ID zalogowanego użytkownika
-                title: document.getElementById('title').value,
-                platform: document.getElementById('platform').value,
-                release_date: document.getElementById('release_date').value,
-                offers: gatheredOffers // Twoja tablica obiektów z ofertami sklepów
+            const title = document.getElementById('title').value.trim();
+            const platform = document.getElementById('platform').value;
+            const release_date = document.getElementById('release_date').value.trim();
+
+            const offerRows = document.querySelectorAll('.offer-row');
+            const offers = [];
+
+            offerRows.forEach(row => {
+                const store_name = row.querySelector('.offer-store').value.trim();
+                const price = parseFloat(row.querySelector('.offer-price').value);
+                const order_number = row.querySelector('.offer-order').value.trim() || null;
+                const url = row.querySelector('.offer-url').value.trim() || null;
+
+                if (store_name && !isNaN(price)) {
+                    offers.push({ store_name, price, order_number, url });
+                }
+            });
+
+            if (offers.length === 0) {
+                alert("Musisz dodać przynajmniej jedną poprawną ofertę sklepu!");
+                return;
+            }
+
+            const payload = {
+                user_id: parseInt(userId),
+                title: title,
+                platform: platform,
+                release_date: release_date,
+                offers: offers
             };
 
             try {
                 const response = await fetch('https://preorder-api-pdjz.onrender.com/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
                     window.location.href = 'list.html';
                 } else {
-                    alert("Nie udało się dodać preordera.");
+                    const errData = await response.json();
+                    alert("Błąd podczas zapisywania: " + (errData.detail || "Nieznany błąd"));
                 }
             } catch (error) {
-                console.error("Błąd:", error);
-                alert("Problem z połączeniem z API.");
+                console.error("Błąd połączenia:", error);
+                alert("Wystąpił problem z połączeniem z serwerem API.");
             }
         });
     </script>
