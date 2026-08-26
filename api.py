@@ -11,7 +11,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://preordergames.dwiad1110.pages.dev", 
+        "https://preordergames.dwiad1110.workers.dev", 
         "http://localhost:5500" # Zostaw do testów u siebie na komputerze
     ],
     allow_credentials=True,
