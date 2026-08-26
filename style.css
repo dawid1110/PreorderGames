@@ -180,3 +180,23 @@ body.minimal-dark { background-color: #09090b; color: #ededed; }
     .offer-row-pro { flex-direction: column; align-items: stretch; padding: 12px; }
     .btn-delete-pro { align-self: flex-end; }
 }
+
+/* Przycisk usuwania w karcie gry (Kosz) */
+.btn-delete-game {
+    background: transparent;
+    border: none;
+    color: #52525b; /* Domyślnie dyskretny szary */
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete-game:hover {
+    background: rgba(239, 68, 68, 0.15); /* Czerwone tło po najechaniu */
+    color: #ef4444; /* Ikona staje się krwiście czerwona */
+    transform: scale(1.1);
+}

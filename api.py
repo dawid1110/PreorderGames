@@ -20,6 +20,10 @@ class Game(BaseModel):
     release_date: str
     offers: List[StoreOffer]
 
+class DeleteGameRequest(BaseModel):
+    title: str
+    platform: str
+
 app = FastAPI()
 
 origins = [
@@ -105,3 +109,37 @@ def get_preorders():
         existing_data = json.load(f)
 
     return existing_data
+
+@app.delete("/delete")
+def delete_preorder(game_to_delete: DeleteGameRequest):
+    """
+    Usuwa grę z pliku na podstawie tytułu i platformy.
+    """
+    existing_data = []
+
+    if os.path.exists(file_name):
+        with open(file_name, 'r', encoding="utf-8") as f:
+            try:
+                existing_data = json.load(f)
+            except json.JSONDecodeError:
+                return {"message": "Baza jest pusta."}
+
+    # Sprawdzamy początkową długość listy
+    initial_length = len(existing_data)
+
+    # Filtrujemy listę - zostawiamy tylko te gry, które NIE PASUJĄ do przesłanych danych
+    existing_data = [
+        game for game in existing_data
+        if not (game["title"].lower() == game_to_delete.title.lower() and 
+                game["platform"].lower() == game_to_delete.platform.lower())
+    ]
+
+    # Jeśli długość się nie zmieniła, znaczy że nie znaleźliśmy takiej gry
+    if len(existing_data) == initial_length:
+        return {"message": "Nie znaleziono takiej gry do usunięcia."}, 404
+
+    # Zapisujemy zaktualizowaną (krótszą) listę do pliku
+    with open(file_name, 'w', encoding="utf-8") as f:
+        json.dump(existing_data, f, ensure_ascii=False, indent=4)
+
+    return {"message": "Preorder został usunięty pomyślnie!"}
