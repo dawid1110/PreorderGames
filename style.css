@@ -200,3 +200,91 @@ body.minimal-dark { background-color: #09090b; color: #ededed; }
     color: #ef4444; /* Ikona staje się krwiście czerwona */
     transform: scale(1.1);
 }
+
+/* ====================================================
+   UKŁAD STRONY: LISTA GIER + PANEL BOCZNY (KOSZTY)
+   ==================================================== */
+.list-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* Lewa kolumna elastyczna, prawa na sztywno 340px */
+    gap: 30px;
+    align-items: start; /* Kluczowe dla pozycji sticky! */
+}
+
+/* Karta Podsumowania (Sticky) */
+.summary-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px;
+    position: sticky;
+    top: 30px; /* Odstęp od góry ekranu przy scrollowaniu */
+    opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.summary-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #ffffff;
+}
+
+.summary-subtitle {
+    color: #a1a1aa;
+    font-size: 0.85rem;
+    margin: 0 0 24px 0;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed rgba(255,255,255,0.15);
+}
+
+/* Tabelka z kosztami */
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    color: #d4d4d8;
+}
+
+.summary-table td.amount {
+    text-align: right;
+    font-weight: 600;
+    color: #38bdf8; /* Jasny błękit dla wydatków */
+}
+
+/* Wiersz z podsumowaniem całkowitym */
+.summary-total-row td {
+    border-bottom: none;
+    padding-top: 20px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.summary-total-row td.amount {
+    color: var(--success); /* Zielony dla kwoty całkowitej */
+}
+
+/* Responsywność - na telefonach sidebar ląduje na górze! */
+@media (max-width: 960px) {
+    .list-layout {
+        grid-template-columns: 1fr; /* Na telefonach wszystko w jednej kolumnie */
+    }
+    .summary-card {
+        position: static;
+        order: -1; /* Przerzuca tabelkę na samą górę nad grami */
+        margin-bottom: 20px;
+    }
+}

@@ -32,6 +32,33 @@
             </div>
         </div>
     </div>
+
+    <!-- Nowy układ: Siatka z paskiem bocznym -->
+        <div class="list-layout">
+            
+            <!-- Lewa kolumna: Gry -->
+            <div id="games-container">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Ładowanie danych z chmury...</p>
+                </div>
+            </div>
+
+            <!-- Prawa kolumna: Pasek boczny z podsumowaniem -->
+            <aside class="summary-sidebar">
+                <div class="summary-card" style="animation-delay: 0.2s;">
+                    <div class="summary-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                        <h3>Kosztorys</h3>
+                    </div>
+                    <p class="summary-subtitle">Najniższe prognozowane ceny</p>
+                    <div id="monthly-summary">
+                        <p class="loading-text">Liczenie...</p>
+                    </div>
+                </div>
+            </aside>
+            
+        </div>
     
 
     <script>
@@ -47,6 +74,67 @@
                     container.innerHTML = '<div class="empty-state">Brak preorderów w bazie.</div>';
                     return;
                 }
+
+                // --- LOGIKA PODSUMOWANIA WYDATKÓW ---
+                const summaryContainer = document.getElementById('monthly-summary');
+                
+                if (data.length === 0) {
+                    summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel jest bezpieczny!</p>';
+                } else {
+                    const monthlyCosts = {};
+                    let grandTotal = 0;
+
+                    data.forEach(game => {
+                        if (game.offers && game.offers.length > 0) {
+                            // 1. Znajdź najtańszą ofertę dla danej gry
+                            const cheapestPrice = Math.min(...game.offers.map(o => o.price));
+                            
+                            // 2. Wyciągnij rok i miesiąc z daty premiery (YYYY-MM-DD -> YYYY-MM)
+                            const monthKey = game.release_date.substring(0, 7); 
+                            
+                            // 3. Zainicjuj miesiąc w obiekcie, jeśli go tam nie ma
+                            if (!monthlyCosts[monthKey]) {
+                                // Zamieniamy "2026-10" na ładne polskie słowo "Październik 2026"
+                                const [year, month] = monthKey.split('-');
+                                const dateObj = new Date(year, parseInt(month) - 1, 1);
+                                const monthLabel = dateObj.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+                                const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+                                
+                                monthlyCosts[monthKey] = { label: capitalizedLabel, total: 0 };
+                            }
+                            
+                            // 4. Dodaj kwotę do miesiąca i do sumy całkowitej
+                            monthlyCosts[monthKey].total += cheapestPrice;
+                            grandTotal += cheapestPrice;
+                        }
+                    });
+
+                    // Sortujemy miesiące chronologicznie
+                    const sortedMonths = Object.keys(monthlyCosts).sort();
+                    
+                    // Budujemy kod HTML tabeli
+                    const tableRows = sortedMonths.map(key => `
+                        <tr>
+                            <td>${monthlyCosts[key].label}</td>
+                            <td class="amount">${monthlyCosts[key].total.toFixed(2)} zł</td>
+                        </tr>
+                    `).join('');
+
+                    summaryContainer.innerHTML = `
+                        <table class="summary-table">
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                            <tfoot>
+                                <tr class="summary-total-row">
+                                    <td>Razem</td>
+                                    <td class="amount">${grandTotal.toFixed(2)} zł</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    `;
+                }
+                // --- KONIEC LOGIKI PODSUMOWANIA ---
                 
                 // Budujemy kod HTML dla wszystkich gier naraz (szybsze renderowanie)
                 const cardsHtml = data.map((game, index) => {
