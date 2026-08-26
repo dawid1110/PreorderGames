@@ -8,7 +8,7 @@ from typing import List, Optional
 url = os.getenv("TURSO_DATABASE_URL")
 authToken = os.getenv("TURSO_AUTH_TOKEN")
 
-app = FASTAPI()
+app = FastAPI()
 
 def get_db_client():
     return libsql_client.create_client(url=url, auth_token=authToken)
