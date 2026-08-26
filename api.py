@@ -1,63 +1,92 @@
-import os
-import libsql_client
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
-
-# Inicjalizacja połączenia z Turso
-url = os.getenv("TURSO_DATABASE_URL")
-authToken = os.getenv("TURSO_AUTH_TOKEN")
+from passlib.context import CryptContext
+import os
 
 app = FastAPI()
 
+# Konfiguracja CORS (dostosuj do swoich potrzeb)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Pozwala na zapytania z każdej strony (do testów idealne)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Funkcja pomocnicza do łączenia z bazą (Dostosuj do swojego klienta Turso/libsql)
 def get_db_client():
-    return libsql_client.create_client(url=url, auth_token=authToken)
+    # Tutaj wstawiasz swoją inicjalizację klienta bazy danych (np. libsql.connect lub client async)
+    # Zależnie od tego, jak miałeś to wcześniej skonfigurowane:
+    pass
 
-# Modele Pydantic dopasowane do struktury JSON wysyłanej z frontendu
-class Offer(BaseModel):
-    store_name: str
-    price: float
-    orderNumber: Optional[int] = None
-    url: Optional[str] = None
+# ==========================================
+# AUTORYZACJA
+# ==========================================
 
-class Game(BaseModel):
-    title: str
-    platform: str
-    release_date: str
-    offers: List[Offer]
+@app.post("/register")
+async def register(data: dict):
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="Podaj nazwę użytkownika i hasło.")
+        
+    hashed_password = pwd_context.hash(password)
+    client = get_db_client()
+    
+    try:
+        await client.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            [username, hashed_password]
+        )
+        await client.close()
+        return {"status": "success", "message": "Rejestracja udana!"}
+    except Exception as e:
+        await client.close()
+        raise HTTPException(status_code=400, detail="Użytkownik o takiej nazwie już istnieje.")
 
-class DeleteGameRequest(BaseModel):
-    title: str
-    platform: str
+@app.post("/login")
+async def login(data: dict):
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    
+    client = get_db_client()
+    res = await client.execute(
+        "SELECT id, password_hash FROM users WHERE username = ?",
+        [username]
+    )
+    await client.close()
+    
+    if not res.rows:
+        raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
+        
+    user_id, password_hash = res.rows[0]
+    
+    if not pwd_context.verify(password, password_hash):
+        raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
+        
+    return {"status": "success", "user_id": user_id, "username": username}
 
 
+# ==========================================
+# PREORDERS & OFERTY
+# ==========================================
 
 @app.get("/get_preorders")
-async def get_preorders():
+async def get_preorders(user_id: int):
     client = get_db_client()
-    user_id = 1  
     
     games_res = await client.execute(
         "SELECT id, title, platform, release_date FROM games WHERE user_id = ?", 
         [user_id]
     )
     
-    # Słownik do grupowania gier po tytule i platformie
     games_dict = {}
-    
     for game_row in games_res.rows:
         game_id, title, platform, release_date = game_row
-        
-        # Klucz normalizujący (małe litery, żeby uniknąć literówek)
         key = (title.strip().lower(), platform.strip().lower())
         
         offers_res = await client.execute(
@@ -75,7 +104,6 @@ async def get_preorders():
                 "url": url
             })
             
-        # Jeśli gra już istnieje w słowniku, dopisujemy jej oferty do wspólnej listy
         if key in games_dict:
             games_dict[key]["offers"].extend(offers)
         else:
@@ -87,121 +115,83 @@ async def get_preorders():
             }
             
     await client.close()
-    
-    # Zwracamy listę unikalnych gier ze wszystkimi ofertami naraz
     return list(games_dict.values())
 
 
-# ==========================================
-# 2. DODAWANIE / AKTUALIZACJA PREORDERU (POST)
-# ==========================================
 @app.post("/add")
-async def add_preorder(incoming_data: Game):
-    client = get_db_client()
-    user_id = 1  
-    
-    # DODANO await!
-    existing_game = await client.execute(
-        "SELECT id FROM games WHERE user_id = ? AND LOWER(title) = ? AND LOWER(platform) = ?",
-        [user_id, incoming_data.title.lower(), incoming_data.platform.lower()]
-    )
-    
-    if len(existing_game.rows) > 0:
-        game_id = existing_game.rows[0][0]
-        for new_offer in incoming_data.offers:
-            existing_offer = await client.execute(
-                "SELECT id FROM store_offers WHERE game_id = ? AND LOWER(store_name) = ?",
-                [game_id, new_offer.store_name.lower()]
-            )
-            
-            if len(existing_offer.rows) > 0:
-                await client.execute(
-                    "UPDATE store_offers SET price = ?, order_number = ?, url = ? WHERE id = ?",
-                    [new_offer.price, new_offer.orderNumber, str(new_offer.url) if new_offer.url else None, existing_offer.rows[0][0]]
-                )
-            else:
-                await client.execute(
-                    "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
-                    [game_id, new_offer.store_name, new_offer.price, new_offer.orderNumber, str(new_offer.url) if new_offer.url else None]
-                )
-    else:
-        res = await client.execute(
-            "INSERT INTO games (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
-            [user_id, incoming_data.title, incoming_data.platform, incoming_data.release_date]
-        )
-        game_id = res.last_insert_rowid
-        
-        for new_offer in incoming_data.offers:
-            await client.execute(
-                "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
-                [game_id, new_offer.store_name, new_offer.price, new_offer.orderNumber, str(new_offer.url) if new_offer.url else None]
-            )
-            
-    await client.close()
-    return {"message": "Preorder zapisany w bazie pomyślnie!"}
-
-
-# ==========================================
-# 3. USUWANIE PREORDERU (DELETE)
-# ==========================================
-@app.delete("/delete")
-async def delete_preorder(game_to_delete: DeleteGameRequest):
-    client = get_db_client()
-    user_id = 1
-    
-    # DODANO await!
-    await client.execute(
-        "DELETE FROM games WHERE user_id = ? AND LOWER(title) = ? AND LOWER(platform) = ?",
-        [user_id, game_to_delete.title.lower(), game_to_delete.platform.lower()]
-    )
-    
-    await client.close()
-    return {"message": "Preorder został usunięty z bazy!"}
-
-@app.post("/move_to_collection")
-async def move_to_collection(data: dict):
+async def add_preorder(data: dict):
+    user_id = data.get("user_id")
     title = data.get("title")
     platform = data.get("platform")
-    user_id = 1  # Domyślny użytkownik
+    release_date = data.get("release_date")
+    offers = data.get("offers", [])
     
+    if not user_id or not title or not platform:
+        raise HTTPException(status_code=400, detail="Brak wymaganych danych.")
+        
     client = get_db_client()
     
     try:
-        # 1. Znajdujemy grę w tabeli games
         game_res = await client.execute(
-            "SELECT id, release_date FROM games WHERE title = ? AND platform = ? AND user_id = ?",
-            [title, platform, user_id]
-        )
-        
-        if not game_res.rows:
-            await client.close()
-            raise HTTPException(status_code=404, detail="Gra nie została znaleziona w preorderach.")
-            
-        game_id, release_date = game_res.rows[0]
-        
-        # 2. Przenosimy (wstawiamy) do tabeli collections
-        await client.execute(
-            "INSERT INTO collections (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
+            "INSERT INTO games (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
             [user_id, title, platform, release_date]
         )
+        game_id = game_res.last_insert_rowid
         
-        # 3. Usuwamy powiązane oferty z store_offers (wymóg klucza obcego)
-        await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
-        
-        # 4. Usuwamy grę z tabeli games
-        await client.execute("DELETE FROM games WHERE id = ?", [game_id])
-        
+        for offer in offers:
+            store_name = offer.get("store_name")
+            price = offer.get("price")
+            order_number = offer.get("order_number")
+            url = offer.get("url")
+            
+            if store_name and price is not None:
+                await client.execute(
+                    "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
+                    [game_id, store_name, price, order_number, url]
+                )
+                
         await client.close()
-        return {"status": "success", "message": "Gra została przeniesiona do kolekcji!"}
+        return {"status": "success", "message": "Preorder dodany pomyślnie!"}
         
     except Exception as e:
         await client.close()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/get_collection")
-async def get_collection():
+
+@app.delete("/delete")
+async def delete_game(data: dict):
+    title = data.get("title")
+    platform = data.get("platform")
+    user_id = data.get("user_id")
+    
     client = get_db_client()
-    user_id = 1  
+    try:
+        game_res = await client.execute(
+            "SELECT id FROM games WHERE title = ? AND platform = ? AND user_id = ?",
+            [title, platform, user_id]
+        )
+        if not game_res.rows:
+            await client.close()
+            raise HTTPException(status_code=404, detail="Gra nie znaleziona.")
+            
+        game_id = game_res.rows[0][0]
+        await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
+        await client.execute("DELETE FROM games WHERE id = ?", [game_id])
+        
+        await client.close()
+        return {"status": "success"}
+    except Exception as e:
+        await client.close()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==========================================
+# KOLEKCJA
+# ==========================================
+
+@app.get("/get_collection")
+async def get_collection(user_id: int):
+    client = get_db_client()
     
     res = await client.execute(
         "SELECT id, title, platform, release_date, date_added FROM collections WHERE user_id = ? ORDER BY date_added DESC",
@@ -222,10 +212,44 @@ async def get_collection():
     await client.close()
     return result
 
+
+@app.post("/move_to_collection")
+async def move_to_collection(data: dict):
+    title = data.get("title")
+    platform = data.get("platform")
+    user_id = data.get("user_id")
+    
+    client = get_db_client()
+    try:
+        game_res = await client.execute(
+            "SELECT id, release_date FROM games WHERE title = ? AND platform = ? AND user_id = ?",
+            [title, platform, user_id]
+        )
+        
+        if not game_res.rows:
+            await client.close()
+            raise HTTPException(status_code=404, detail="Gra nie została znaleziona.")
+            
+        game_id, release_date = game_res.rows[0]
+        
+        await client.execute(
+            "INSERT INTO collections (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
+            [user_id, title, platform, release_date]
+        )
+        await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
+        await client.execute("DELETE FROM games WHERE id = ?", [game_id])
+        
+        await client.close()
+        return {"status": "success"}
+    except Exception as e:
+        await client.close()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.delete("/delete_from_collection")
 async def delete_from_collection(data: dict):
     col_id = data.get("id")
-    user_id = 1
+    user_id = data.get("user_id")
     
     client = get_db_client()
     try:

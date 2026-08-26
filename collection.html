@@ -6,7 +6,6 @@
     <title>Preorder Hub | Moja Kolekcja</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Styl dla licznika w statystykach */
         .stat-number {
             font-size: 2rem;
             font-weight: 700;
@@ -25,12 +24,10 @@
 </head>
 <body>
 
-    <!-- Tło -->
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
     <div class="container">
-        <!-- Pasek Nawigacji Powrotu -->
         <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
             <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -43,10 +40,7 @@
             <p class="subtitle">Fizyczna półka z odebranymi grami.</p>
         </header>
 
-        <!-- Układ: Siatka z paskiem bocznym -->
         <div class="list-layout">
-            
-            <!-- Lewa kolumna: Lista gier w kolekcji -->
             <div id="collection-container">
                 <div class="loading-state">
                     <div class="spinner"></div>
@@ -54,7 +48,6 @@
                 </div>
             </div>
 
-            <!-- Prawa kolumna: Panel statystyk -->
             <aside class="summary-sidebar">
                 <div class="summary-card" style="animation-delay: 0.2s;">
                     <div class="summary-header">
@@ -67,13 +60,16 @@
                     </div>
                 </div>
             </aside>
-
         </div>
     </div>
 
-    <!-- Logika aplikacji -->
     <script>
-        fetch('https://preorder-api-pdjz.onrender.com/get_collection')
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        fetch(`https://preorder-api-pdjz.onrender.com/get_collection?user_id=${userId}`)
             .then(response => {
                 if (!response.ok) throw new Error('Błąd sieci');
                 return response.json();
@@ -83,29 +79,14 @@
                 const statsContainer = document.getElementById('collection-stats');
                 
                 if (data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Twoja kolekcja jest na razie pusta. Odbierz preorder i przenieś go tutaj!</div>';
-                    statsContainer.innerHTML = `
-                        <div>
-                            <span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry w kolekcji</span>
-                            <div class="stat-number">0</div>
-                        </div>
-                    `;
+                    container.innerHTML = '<div class="empty-state">Twoja kolekcja jest na razie pusta.</div>';
+                    statsContainer.innerHTML = `<div><span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry</span><div class="stat-number">0</div></div>`;
                     return;
                 }
 
-                // 1. Wyświetlanie statystyk
-                statsContainer.innerHTML = `
-                    <div>
-                        <span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry w kolekcji</span>
-                        <div class="stat-number">${data.length}</div>
-                    </div>
-                `;
+                statsContainer.innerHTML = `<div><span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry</span><div class="stat-number">${data.length}</div></div>`;
 
-                // 2. Generowanie kart kolekcji
                 const cardsHtml = data.map((game, index) => {
-                    let encodedTitle = encodeURIComponent(game.title);
-                    
-                    // Ładne formatowanie daty dodania (jeśli dostępna)
                     let addedDateText = game.date_added ? game.date_added.split('T')[0] : 'Brak daty';
 
                     return `
@@ -136,40 +117,16 @@
 
                 container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
             })
-            .catch(error => {
-                console.error('Błąd pobierania kolekcji:', error);
-                document.getElementById('collection-container').innerHTML = `
-                    <div class="error-state">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="margin-bottom: 16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        <h3>Nie udało się załadować kolekcji.</h3>
-                        <p>Sprawdź połączenie z serwerem API.</p>
-                    </div>
-                `;
-            });
+            .catch(error => console.error('Błąd:', error));
 
-        // ==========================================
-        // Funkcja usuwania z kolekcji
-        // ==========================================
         async function deleteFromCollection(id, title) {
-            const isConfirmed = confirm(`Czy na pewno chcesz usunąć "${title}" ze swojej kolekcji?`);
-            if (!isConfirmed) return;
-
-            try {
-                const response = await fetch('https://preorder-api-pdjz.onrender.com/delete_from_collection', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id })
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert("Nie udało się usunąć pozycji.");
-                }
-            } catch (error) {
-                console.error("Błąd usuwania:", error);
-                alert("Wystąpił problem z połączeniem z API.");
-            }
+            if (!confirm(`Usunąć "${title}" z kolekcji?`)) return;
+            await fetch('https://preorder-api-pdjz.onrender.com/delete_from_collection', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, user_id: parseInt(userId) })
+            });
+            window.location.reload();
         }
     </script>
 </body>
