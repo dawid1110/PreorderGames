@@ -34,12 +34,14 @@ class DeleteGameRequest(BaseModel):
 # ==========================================
 # 1. POBIERANIE PREORDERÓW (GET)
 # ==========================================
+# ==========================================
+# 1. POBIERANIE PREORDERÓW (GET)
+# ==========================================
 @app.get("/get_preorders")
-def get_preorders():
+async def get_preorders():  # <-- Zmieniono na async def
     client = get_db_client()
-    user_id = 1  # Domyślny użytkownik na czas testów bez logowania
+    user_id = 1  
     
-    # Pobieramy gry z tabeli games
     games_res = client.execute(
         "SELECT id, title, platform, release_date FROM games WHERE user_id = ?", 
         [user_id]
@@ -49,7 +51,6 @@ def get_preorders():
     for game_row in games_res.rows:
         game_id, title, platform, release_date = game_row
         
-        # Pobieramy oferty dla danej gry z tabeli store_offers
         offers_res = client.execute(
             "SELECT store_name, price, order_number, url FROM store_offers WHERE game_id = ?", 
             [game_id]
@@ -80,11 +81,10 @@ def get_preorders():
 # 2. DODAWANIE / AKTUALIZACJA PREORDERU (POST)
 # ==========================================
 @app.post("/add")
-def add_preorder(incoming_data: Game):
+async def add_preorder(incoming_data: Game):  # <-- Zmieniono na async def
     client = get_db_client()
-    user_id = 1  # Domyślny użytkownik
+    user_id = 1  
     
-    # Sprawdzamy czy gra o takim tytule i platformie już istnieje w bazie
     existing_game = client.execute(
         "SELECT id FROM games WHERE user_id = ? AND LOWER(title) = ? AND LOWER(platform) = ?",
         [user_id, incoming_data.title.lower(), incoming_data.platform.lower()]
@@ -92,8 +92,6 @@ def add_preorder(incoming_data: Game):
     
     if len(existing_game.rows) > 0:
         game_id = existing_game.rows[0][0]
-        
-        # Gra już jest – aktualizujemy/dodajemy oferty
         for new_offer in incoming_data.offers:
             existing_offer = client.execute(
                 "SELECT id FROM store_offers WHERE game_id = ? AND LOWER(store_name) = ?",
@@ -101,26 +99,22 @@ def add_preorder(incoming_data: Game):
             )
             
             if len(existing_offer.rows) > 0:
-                # Aktualizujemy cenę / link / numer zamówienia w sklepie
                 client.execute(
                     "UPDATE store_offers SET price = ?, order_number = ?, url = ? WHERE id = ?",
                     [new_offer.price, new_offer.orderNumber, str(new_offer.url) if new_offer.url else None, existing_offer.rows[0][0]]
                 )
             else:
-                # Dodajemy nowy sklep do istniejącej gry
                 client.execute(
                     "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
                     [game_id, new_offer.store_name, new_offer.price, new_offer.orderNumber, str(new_offer.url) if new_offer.url else None]
                 )
     else:
-        # Nowa gra – wstawiamy do tabeli games
         res = client.execute(
             "INSERT INTO games (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
             [user_id, incoming_data.title, incoming_data.platform, incoming_data.release_date]
         )
         game_id = res.last_insert_rowid
         
-        # Wstawiamy powiązane oferty sklepów do store_offers
         for new_offer in incoming_data.offers:
             client.execute(
                 "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
@@ -135,12 +129,10 @@ def add_preorder(incoming_data: Game):
 # 3. USUWANIE PREORDERU (DELETE)
 # ==========================================
 @app.delete("/delete")
-def delete_preorder(game_to_delete: DeleteGameRequest):
+async def delete_preorder(game_to_delete: DeleteGameRequest):  # <-- Zmieniono na async def
     client = get_db_client()
     user_id = 1
     
-    # Usuwamy grę z tabeli games. 
-    # Dzięki regule ON DELETE CASCADE w tabeli store_offers, oferty usuną się automatycznie!
     client.execute(
         "DELETE FROM games WHERE user_id = ? AND LOWER(title) = ? AND LOWER(platform) = ?",
         [user_id, game_to_delete.title.lower(), game_to_delete.platform.lower()]
