@@ -236,6 +236,7 @@
                                     </button>
                                     <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
+                            </div> <!-- TUTAJ BYŁ BRAK ZAMKNIĘCIA DIVA -->
                             
                             <h2 class="game-title" style="margin-bottom: 4px;">${game.title}</h2>
                             
@@ -297,6 +298,7 @@
                 alert("Wystąpił problem z połączeniem z API.");
             }
         }
+
         async function moveToCollection(title, platform) {
             const isConfirmed = confirm(`Odebrałeś preorder "${title}" (${platform})? Gra zostanie przeniesiona do Twojej kolekcji.`);
             if (!isConfirmed) return;
