@@ -51,9 +51,14 @@ async def get_preorders():
         [user_id]
     )
     
-    result = []
+    # Słownik do grupowania gier po tytule i platformie
+    games_dict = {}
+    
     for game_row in games_res.rows:
         game_id, title, platform, release_date = game_row
+        
+        # Klucz normalizujący (małe litery, żeby uniknąć literówek)
+        key = (title.strip().lower(), platform.strip().lower())
         
         offers_res = await client.execute(
             "SELECT store_name, price, order_number, url FROM store_offers WHERE game_id = ?", 
@@ -66,19 +71,25 @@ async def get_preorders():
             offers.append({
                 "store_name": store_name,
                 "price": price,
-                "order_number": order_number,
+                "orderNumber": order_number,
                 "url": url
             })
             
-        result.append({
-            "title": title,
-            "platform": platform,
-            "release_date": release_date,
-            "offers": offers
-        })
-        
+        # Jeśli gra już istnieje w słowniku, dopisujemy jej oferty do wspólnej listy
+        if key in games_dict:
+            games_dict[key]["offers"].extend(offers)
+        else:
+            games_dict[key] = {
+                "title": title,
+                "platform": platform,
+                "release_date": release_date,
+                "offers": offers
+            }
+            
     await client.close()
-    return result
+    
+    # Zwracamy listę unikalnych gier ze wszystkimi ofertami naraz
+    return list(games_dict.values())
 
 
 # ==========================================
