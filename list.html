@@ -135,6 +135,29 @@
             window.location.href = 'login.html';
         }
 
+        // Pomocnicza funkcja do zamiany daty na wartość liczbową do sortowania
+        function parseDate(dateStr) {
+            if (!dateStr) return Number.MAX_SAFE_INTEGER; // Brak daty na sam koniec
+            let parts, year, month, day = 1;
+            
+            if (dateStr.includes('.')) {
+                // Format DD.MM.YYYY
+                parts = dateStr.split('.');
+                day = parseInt(parts[0], 10) || 1;
+                month = parseInt(parts[1], 10) - 1; // Miesiące w JS są od 0
+                year = parseInt(parts[2], 10);
+            } else if (dateStr.includes('-')) {
+                // Format YYYY-MM-DD lub YYYY-MM
+                parts = dateStr.split('-');
+                year = parseInt(parts[0], 10);
+                month = parseInt(parts[1], 10) - 1;
+                day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+            } else {
+                return Number.MAX_SAFE_INTEGER;
+            }
+            return new Date(year, month, day).getTime();
+        }
+
         // Pobieranie danych
         fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`)
             .then(response => {
@@ -142,7 +165,10 @@
                 return response.json();
             })
             .then(data => {
-                allPreorders = data; // Zapisujemy do globalnej tablicy na potrzeby filtrów
+                // SORTOWANIE: Od najbliższej do najdalszej premiery
+                data.sort((a, b) => parseDate(a.release_date) - parseDate(b.release_date));
+
+                allPreorders = data; // Zapisujemy posortowane dane do globalnej tablicy
                 updateSummary(allPreorders);
                 renderPreorders(allPreorders);
             })
@@ -227,7 +253,7 @@
                 let offersHtml = game.offers.map(o => {
                     const orderNum = o.order_number || o.orderNumber || o.order;
                     const orderBadgeHtml = orderNum 
-                        ? `<span class="order-badge" style="font-size: 1.00rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
+                        ? `<span class="order-badge" style="font-size: 0.75rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
                         : '';
 
                     return `
@@ -288,7 +314,7 @@
             container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
         }
 
-        // Obsługa filtrów i wyszukiwania (uwzględniająca tytuł, sklep oraz numer zamówienia)
+        // Obsługa filtrów i wyszukiwania
         function applyFilters() {
             const searchText = document.getElementById('search-input').value.toLowerCase();
 
