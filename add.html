@@ -231,6 +231,12 @@
             transform: translateY(-2px);
             box-shadow: 0 15px 25px -5px rgba(168, 85, 247, 0.6);
         }
+        /* Zmienia czarną ikonkę kalendarza na białą */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
     </style>
 </head>
 <body>
@@ -277,7 +283,7 @@
 
                     <div class="form-group" style="margin-bottom: 0;">
                         <label>Data premiery</label>
-                        <input type="date" id="release_date" required placeholder="np. 2026-11-19">
+                        <input type="date" id="release_date" required placeholder="np. 2026-11-19" onclick="this.showPicker()">
                     </div>
                 </div>
 
