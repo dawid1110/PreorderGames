@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="192" height="192" rx="42" fill="#09090b" />
+  <rect x="9" y="9" width="174" height="174" rx="36" fill="none" stroke="url(#primaryGrad)" stroke-width="1.5" opacity="0.25" />
+  
+  <rect x="30" y="52.5" width="132" height="87" rx="43.5" fill="#18181b" stroke="url(#primaryGrad)" stroke-width="6" />
+  
+  <rect x="54" y="90" width="27" height="9" rx="2.25" fill="url(#primaryGrad)" />
+  <rect x="63" y="81" width="9" height="27" rx="2.25" fill="url(#primaryGrad)" />
+  
+  <circle cx="133.5" cy="84" r="5.25" fill="url(#primaryGrad)" />
+  <circle cx="147" cy="94.5" r="5.25" fill="url(#primaryGrad)" />
+  <circle cx="133.5" cy="105" r="5.25" fill="url(#primaryGrad)" />
+  <circle cx="120" cy="94.5" r="5.25" fill="url(#primaryGrad)" />
+</svg>
