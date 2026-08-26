@@ -390,7 +390,7 @@
                 });
 
                 if (response.ok) {
-                    window.location.href = 'list.html';
+                    window.location.href = 'add.html';
                 } else {
                     const errData = await response.json();
                     alert("Błąd podczas zapisywania: " + (errData.detail || "Nieznany błąd"));
