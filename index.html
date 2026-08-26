@@ -5,14 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preorder Hub - Panel Główny</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dostosowanie siatki na 3 kafelki, żeby ładnie współgrały */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Dekoracyjne tło z poprzedniego widoku -->
+    <!-- Dekoracyjne tło -->
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
-    <div class="container dashboard-container">
+    <div class="container dashboard-container" style="max-width: 1000px;">
         <header class="app-header">
             <h1 class="gradient-text">Preorder Hub</h1>
             <p class="subtitle">Wybierz moduł, do którego chcesz przejść</p>
@@ -23,7 +32,6 @@
             <!-- MODUŁ 1: Przeglądanie -->
             <a href="list.html" class="module-card" style="animation-delay: 0.1s;">
                 <div class="module-icon icon-blue">
-                    <!-- Ikona Listy/Pada -->
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
                         <circle cx="17" cy="12" r="1"></circle>
@@ -44,7 +52,6 @@
             <!-- MODUŁ 2: Dodawanie -->
             <a href="add.html" class="module-card" style="animation-delay: 0.2s;">
                 <div class="module-icon icon-purple">
-                    <!-- Ikona Dodawania -->
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -57,6 +64,23 @@
                 
                 <div class="module-footer text-purple">
                     <span>Otwórz formularz</span>
+                    <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <!-- MODUŁ 3: Kolekcja (Nowość) -->
+            <a href="collection.html" class="module-card" style="animation-delay: 0.3s;">
+                <div class="module-icon" style="background: rgba(34, 197, 94, 0.12); color: #22c55e;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </div>
+                <h2>Moja Kolekcja</h2>
+                <p>Przeglądaj swoją fizyczną półkę z grami, które zostały już dostarczone i odebrane z preorderów.</p>
+                
+                <div class="module-footer" style="color: #22c55e;">
+                    <span>Otwórz kolekcję</span>
                     <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </div>
             </a>

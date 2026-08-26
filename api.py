@@ -197,3 +197,44 @@ async def move_to_collection(data: dict):
     except Exception as e:
         await client.close()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/get_collection")
+async def get_collection():
+    client = get_db_client()
+    user_id = 1  
+    
+    res = await client.execute(
+        "SELECT id, title, platform, release_date, date_added FROM collections WHERE user_id = ? ORDER BY date_added DESC",
+        [user_id]
+    )
+    
+    result = []
+    for row in res.rows:
+        col_id, title, platform, release_date, date_added = row
+        result.append({
+            "id": col_id,
+            "title": title,
+            "platform": platform,
+            "release_date": release_date,
+            "date_added": date_added
+        })
+        
+    await client.close()
+    return result
+
+@app.delete("/delete_from_collection")
+async def delete_from_collection(data: dict):
+    col_id = data.get("id")
+    user_id = 1
+    
+    client = get_db_client()
+    try:
+        await client.execute(
+            "DELETE FROM collections WHERE id = ? AND user_id = ?",
+            [col_id, user_id]
+        )
+        await client.close()
+        return {"status": "success"}
+    except Exception as e:
+        await client.close()
+        raise HTTPException(status_code=500, detail=str(e))
