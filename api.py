@@ -3,6 +3,7 @@ import libsql_client
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 # Inicjalizacja połączenia z Turso
 url = os.getenv("TURSO_DATABASE_URL")
