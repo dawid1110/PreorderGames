@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from passlib.context import CryptContext
+import hashlib
+import secrets
 import os
+import libsql_client
 
 app = FastAPI()
 
-# Konfiguracja CORS (dostosuj do swoich potrzeb)
+# Konfiguracja CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,13 +16,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Bezpieczne hashowanie wbudowane w Pythona (brak zewnętrznych zależności)
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    return f"{salt}${pwd_hash}"
 
-# Funkcja pomocnicza do łączenia z bazą (Dostosuj do swojego klienta Turso/libsql)
+def verify_password(password: str, stored_hash: str) -> bool:
+    try:
+        salt, pwd_hash = stored_hash.split('$')
+        check_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+        return check_hash == pwd_hash
+    except Exception:
+        return False
+
+# Połączenie z bazą Turso (libsql)
 def get_db_client():
-    # Tutaj wstawiasz swoją inicjalizację klienta bazy danych (np. libsql.connect lub client async)
-    # Zależnie od tego, jak miałeś to wcześniej skonfigurowane:
-    pass
+    return libsql_client.create_client_async(
+        url=os.getenv("LIBSQL_URL"),
+        auth_token=os.getenv("LIBSQL_AUTH_TOKEN")
+    )
 
 # ==========================================
 # AUTORYZACJA
@@ -34,7 +49,7 @@ async def register(data: dict):
     if not username or not password:
         raise HTTPException(status_code=400, detail="Podaj nazwę użytkownika i hasło.")
         
-    hashed_password = pwd_context.hash(password)
+    hashed_password = hash_password(password)
     client = get_db_client()
     
     try:
@@ -65,7 +80,7 @@ async def login(data: dict):
         
     user_id, password_hash = res.rows[0]
     
-    if not pwd_context.verify(password, password_hash):
+    if not verify_password(password, password_hash):
         raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
         
     return {"status": "success", "user_id": user_id, "username": username}
