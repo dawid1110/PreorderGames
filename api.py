@@ -358,6 +358,7 @@ async def send_weekly_summary(user_id: int):
     
     response = requests.post(telegram_url, json=payload)
     if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Błąd wysyłania wiadomości na Telegram")
+        # Pokażmy dokładny błąd, jaki zwraca nam Telegram!
+        raise HTTPException(status_code=500, detail=f"Błąd Telegrama: {response.text}")
 
     return {"status": "success", "sent_games_count": len(this_week_games)}
