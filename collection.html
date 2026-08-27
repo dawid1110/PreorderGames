@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <!-- PWA Meta Tagi -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#a855f7">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preorder Hub | Moja Kolekcja</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #a855f7;
+            margin-top: 8px;
+        }
+        .collection-date {
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="container">
+        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
+            <a href="index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Wróć do Menu
+            </a>
+        </nav>
+
+        <header class="app-header">
+            <h1 class="gradient-text">Twoja Kolekcja</h1>
+            <p class="subtitle">Fizyczna półka z odebranymi grami.</p>
+        </header>
+
+        <div class="list-layout">
+            <div id="collection-container">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Ładowanie kolekcji z chmury...</p>
+                </div>
+            </div>
+
+            <aside class="summary-sidebar">
+                <div class="summary-card" style="animation-delay: 0.2s;">
+                    <div class="summary-header">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        <h3>Statystyki Półki</h3>
+                    </div>
+                    <p class="summary-subtitle">Podsumowanie zgromadzonych tytułów</p>
+                    <div id="collection-stats" style="padding: 10px 0;">
+                        <p style="color: #a1a1aa;">Ładowanie statystyk...</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        fetch(`https://preorder-api-pdjz.onrender.com/get_collection?user_id=${userId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Błąd sieci');
+                return response.json();
+            })
+            .then(data => {
+                const container = document.getElementById('collection-container');
+                const statsContainer = document.getElementById('collection-stats');
+                
+                if (data.length === 0) {
+                    container.innerHTML = '<div class="empty-state">Twoja kolekcja jest na razie pusta.</div>';
+                    statsContainer.innerHTML = `<div><span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry</span><div class="stat-number">0</div></div>`;
+                    return;
+                }
+
+                statsContainer.innerHTML = `<div><span style="color: #a1a1aa; font-size: 0.9rem;">Wszystkie gry</span><div class="stat-number">${data.length}</div></div>`;
+
+                const cardsHtml = data.map((game, index) => {
+                    let addedDateText = game.date_added ? game.date_added.split('T')[0] : 'Brak daty';
+
+                    return `
+                        <div class="game-card" style="animation-delay: ${index * 0.1}s; cursor: default;">
+                            <div class="card-header">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
+                                    <span class="release-date">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        Premiera: ${game.release_date}
+                                    </span>
+                                </div>
+                                
+                                <button class="btn-delete-game" onclick="deleteFromCollection(${game.id}, '${game.title}')" title="Usuń z kolekcji">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                            </div>
+                            
+                            <h2 class="game-title" style="margin-top: 10px; margin-bottom: 4px;">${game.title}</h2>
+                            
+                            <div class="collection-date">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Dodano do kolekcji: ${addedDateText}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
+            })
+            .catch(error => console.error('Błąd:', error));
+
+        async function deleteFromCollection(id, title) {
+            if (!confirm(`Usunąć "${title}" z kolekcji?`)) return;
+            await fetch('https://preorder-api-pdjz.onrender.com/delete_from_collection', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, user_id: parseInt(userId) })
+            });
+            window.location.reload();
+        }
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker zarejestrowany', reg))
+                .catch(err => console.error('Błąd rejestracji Service Workera', err));
+        });
+    }
+    </script>
+</body>
+</html>

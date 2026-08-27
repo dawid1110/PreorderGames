@@ -1,99 +1,464 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <!-- PWA Meta Tagi -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#a855f7">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preorder Hub 🎮</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preorder Hub | Moja Lista</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .game-card {
+            cursor: pointer;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .game-card:hover {
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        .card-preview-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+        }
+        .preview-price {
+            color: #a855f7;
+            font-weight: 600;
+        }
+        .offers-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .game-card.expanded .offers-wrapper {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 16px;
+        }
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        .game-card.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        .btn-collect-game {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .btn-collect-game:hover {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+        
+        /* --- NAPRAWA NAKŁADANIA SIĘ ELEMENTÓW ORAZ RESPONSYWNOŚĆ --- */
+
+        .list-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 32px;
+            align-items: start; 
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+
+        .summary-sidebar {
+            width: 100%;
+            position: sticky; 
+            top: 24px;
+            z-index: 10;
+        }
+
+        /* 1. TABLETY I MNIEJSZE EKRANY */
+        @media (max-width: 1100px) {
+            .list-layout {
+                grid-template-columns: 1fr; /* Kosztorys ląduje pod listą gier */
+            }
+            .games-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* Przejście na 2 kolumny */
+            }
+        }
+
+        /* 2. TELEFONY (Główna poprawka zgniatania) */
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr; /* Wymuszenie 1 kolumny na telefonach */
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Dekoracyjne tło -->
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
 
     <div class="container">
-        <header class="app-header">
-            <h1 class="gradient-text">Preorder Hub</h1>
-            <p class="subtitle">Zarządzaj swoimi zamówieniami w jednym miejscu</p>
-        </header>
-
-        <nav class="nav-back minimal-nav">
+        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
             <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Wróć
+                Wróć do Menu
             </a>
         </nav>
-        
-        <div id="games-container">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <p>Ładowanie danych z chmury...</p>
+
+        <header class="app-header">
+            <h1 class="gradient-text">Nadchodzące Premiery</h1>
+            <p class="subtitle">Śledź swoje zamówienia i kontroluj wydatki.</p>
+        </header>
+
+        <div class="list-layout">
+            <div>
+                <!-- Sekcja wyszukiwania i filtrów -->
+                <div class="filters-card" style="background: rgba(24, 24, 27, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 16px; backdrop-filter: blur(16px); margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;">
+                    
+                    <!-- Wyszukiwarka tekstowa -->
+                    <div style="position: relative; width: 100%;">
+                        <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #71717a;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="search-input" placeholder="Szukaj gry, sklepu lub numeru zamówienia..." style="width: 100%; padding: 12px 16px 12px 42px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-size: 0.95rem; outline: none; transition: all 0.2s;">
+                    </div>
+
+                    <!-- Przyciski filtrowania po platformie -->
+                    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;" class="platform-filters">
+                        <button class="filter-btn active" onclick="filterPlatform('ALL', this)" style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: #a855f7; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;">Wszystkie</button>
+                        <button class="filter-btn" onclick="filterPlatform('PS5', this)" style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(9, 9, 11, 0.8); color: #a1a1aa; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;">PS5</button>
+                        <button class="filter-btn" onclick="filterPlatform('NS2', this)" style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(9, 9, 11, 0.8); color: #a1a1aa; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;">Switch</button>
+                        <button class="filter-btn" onclick="filterPlatform('PC', this)" style="padding: 8px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(9, 9, 11, 0.8); color: #a1a1aa; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s;">PC</button>
+                    </div>
+                </div>
+
+                <div id="games-container">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Ładowanie danych z chmury...</p>
+                    </div>
+                </div>
             </div>
+
+            <aside class="summary-sidebar">
+                <div class="summary-card" id="summary-card" style="animation-delay: 0.2s;">
+                    <!-- Interaktywny nagłówek z ikonką strzałki -->
+                    <div class="summary-header" onclick="toggleSummary()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                            <h3 style="margin: 0;">Kosztorys</h3>
+                        </div>
+                        <svg id="summary-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    
+                    <!-- Zwijany kontener z zawartością -->
+                    <div id="summary-content" style="max-height: 2000px; overflow: hidden; transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease; opacity: 1; margin-top: 12px;">
+                        <p class="summary-subtitle" style="margin-top: 0;">Najniższe prognozowane ceny</p>
+                        <div id="monthly-summary"></div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
-    
 
     <script>
-        fetch('https://preorder-api-pdjz.onrender.com/get_preorders')
+        let allPreorders = [];
+        let currentPlatformFilter = 'ALL';
+
+        // Sprawdzenie autoryzacji
+        const userId = localStorage.getItem('user_id');
+        if (!userId) {
+            window.location.href = 'login.html';
+        }
+
+        // Pomocnicza funkcja do zamiany daty na wartość liczbową do sortowania
+        function parseDate(dateStr) {
+            if (!dateStr) return Number.MAX_SAFE_INTEGER; // Brak daty na sam koniec
+            let parts, year, month, day = 1;
+            
+            if (dateStr.includes('.')) {
+                // Format DD.MM.YYYY
+                parts = dateStr.split('.');
+                day = parseInt(parts[0], 10) || 1;
+                month = parseInt(parts[1], 10) - 1; // Miesiące w JS są od 0
+                year = parseInt(parts[2], 10);
+            } else if (dateStr.includes('-')) {
+                // Format YYYY-MM-DD lub YYYY-MM
+                parts = dateStr.split('-');
+                year = parseInt(parts[0], 10);
+                month = parseInt(parts[1], 10) - 1;
+                day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+            } else {
+                return Number.MAX_SAFE_INTEGER;
+            }
+            return new Date(year, month, day).getTime();
+        }
+
+        // Pobieranie danych
+        fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`)
             .then(response => {
-                if (!response.ok) throw new Error("Błąd podczas pobierania danych");
+                if (!response.ok) throw new Error('Błąd sieci');
                 return response.json();
             })
             .then(data => {
-                const container = document.getElementById('games-container');
-                
-                if (data.length === 0) {
-                    container.innerHTML = '<div class="empty-state">Brak preorderów w bazie.</div>';
-                    return;
+                // SORTOWANIE: Od najbliższej do najdalszej premiery
+                data.sort((a, b) => parseDate(a.release_date) - parseDate(b.release_date));
+
+                allPreorders = data; // Zapisujemy posortowane dane do globalnej tablicy
+                updateSummary(allPreorders);
+                renderPreorders(allPreorders);
+            })
+            .catch(error => {
+                console.error('Błąd:', error);
+                document.getElementById('games-container').innerHTML = '<div class="empty-state" style="color: #ef4444;">Nie udało się pobrać danych z serwera.</div>';
+            });
+
+        // Generowanie kosztorysu
+        function updateSummary(data) {
+            const summaryContainer = document.getElementById('monthly-summary');
+            if (data.length === 0) {
+                summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel bezpieczny!</p>';
+                return;
+            }
+
+            const monthlyCosts = {};
+            let grandTotal = 0;
+
+            data.forEach(game => {
+                if (game.offers && game.offers.length > 0) {
+                    const cheapestPrice = Math.min(...game.offers.map(o => o.price));
+                    
+                    let year, month;
+                    if (game.release_date.includes('.')) {
+                        const parts = game.release_date.split('.');
+                        year = parts[2]; month = parts[1];
+                    } else {
+                        const parts = game.release_date.split('-');
+                        year = parts[0]; month = parts[1];
+                    }
+                    
+                    const monthKey = `${year}-${month}`;
+
+                    if (!monthlyCosts[monthKey]) {
+                        const dateObj = new Date(year, parseInt(month) - 1, 1);
+                        const monthLabel = dateObj.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+                        const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+                        monthlyCosts[monthKey] = { label: capitalizedLabel, total: 0 };
+                    }
+                    
+                    monthlyCosts[monthKey].total += cheapestPrice;
+                    grandTotal += cheapestPrice;
                 }
-                
-                // Budujemy kod HTML dla wszystkich gier naraz (szybsze renderowanie)
-                const cardsHtml = data.map((game, index) => {
-                    // Generujemy oferty z zabezpieczeniem nazwy (store_name lub store)
-                    let offersHtml = game.offers.map(o => `
+            });
+
+            const sortedMonths = Object.keys(monthlyCosts).sort();
+            const tableRows = sortedMonths.map(key => `
+                <tr>
+                    <td>${monthlyCosts[key].label}</td>
+                    <td class="amount">${monthlyCosts[key].total.toFixed(2)} zł</td>
+                </tr>
+            `).join('');
+
+            summaryContainer.innerHTML = `
+                <table class="summary-table">
+                    <tbody>${tableRows}</tbody>
+                    <tfoot>
+                        <tr class="summary-total-row">
+                            <td>Razem</td>
+                            <td class="amount">${grandTotal.toFixed(2)} zł</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+        }
+
+        // Renderowanie listy gier
+        function renderPreorders(preorders) {
+            const container = document.getElementById('games-container');
+
+            if (preorders.length === 0) {
+                container.innerHTML = `<div class="empty-state">Brak preorderów spełniających kryteria.</div>`;
+                return;
+            }
+
+            const cardsHtml = preorders.map((game, index) => {
+                const cheapestPrice = game.offers && game.offers.length > 0 
+                    ? Math.min(...game.offers.map(o => o.price)) 
+                    : 0;
+
+                let offersHtml = game.offers.map(o => {
+                    const orderNum = o.order_number || o.orderNumber || o.order;
+                    const orderBadgeHtml = orderNum 
+                        ? `<span class="order-badge" style="font-size: 0.75rem; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 8px; border-radius: 6px; margin-left: 8px; border: 1px solid rgba(168, 85, 247, 0.3); font-weight: 500;">Nr: ${orderNum}</span>` 
+                        : '';
+
+                    return `
                         <div class="offer-item">
-                            <span class="store-name">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                            <span class="store-name" style="display: flex; align-items: center; flex-wrap: wrap;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                                 ${o.store_name || o.store}
+                                ${orderBadgeHtml}
                             </span>
                             <div class="offer-right">
                                 <span class="price">${o.price.toFixed(2)} zł</span>
-                                <a href="${o.url || '#'}" target="_blank" class="btn-store">Kup</a>
+                                <a href="${o.url || '#'}" target="_blank" class="btn-store" onclick="event.stopPropagation()">Do oferty</a>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                }).join('');
 
-                    // Zwracamy gotową kartę z lekkim opóźnieniem animacji (kaskada)
-                    return `
-                        <div class="game-card" style="animation-delay: ${index * 0.1}s">
-                            <div class="card-header">
+                let encodedTitle = encodeURIComponent(game.title);
+
+                return `
+                    <div class="game-card" style="animation-delay: ${index * 0.1}s" onclick="toggleCard(this)">
+                        <div class="card-header">
+                            <div style="display: flex; gap: 10px; align-items: center;">
                                 <span class="platform-badge platform-${game.platform.toLowerCase()}">${game.platform}</span>
                                 <span class="release-date">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                     ${game.release_date}
                                 </span>
                             </div>
-                            <h2 class="game-title">${game.title}</h2>
+                            
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Odbierz i przenieś do kolekcji">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                </button>
+                                <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                                <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                        </div>
+                        
+                        <h2 class="game-title" style="margin-top: 10px; margin-bottom: 4px;">${game.title}</h2>
+                        
+                        <div class="card-preview-info">
+                            <span>Liczba ofert: ${game.offers.length}</span>
+                            <span class="preview-price">Od ${cheapestPrice.toFixed(2)} zł</span>
+                        </div>
+
+                        <div class="offers-wrapper">
                             <div class="offers-list">
                                 ${offersHtml}
                             </div>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `;
+            }).join('');
 
-                // Wrzucamy wszystko w siatkę (Grid)
-                container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
-            })
-            .catch(error => {
-                console.error('Błąd:', error);
-                document.getElementById('games-container').innerHTML = `
-                    <div class="error-state">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                        <p>Nie udało się połączyć z serwerem. Sprawdź backend na Renderze!</p>
-                    </div>`;
+            container.innerHTML = `<div class="games-grid">${cardsHtml}</div>`;
+        }
+
+        // Obsługa filtrów i wyszukiwania
+        function applyFilters() {
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+
+            const filtered = allPreorders.filter(game => {
+                const matchesPlatform = currentPlatformFilter === 'ALL' || game.platform === currentPlatformFilter;
+                
+                const matchesSearch = game.title.toLowerCase().includes(searchText) || 
+                    (game.offers && game.offers.some(o => {
+                        const storeName = (o.store_name || o.store || '').toLowerCase();
+                        const orderNum = String(o.order_number || o.orderNumber || o.order || '').toLowerCase();
+                        return storeName.includes(searchText) || orderNum.includes(searchText);
+                    }));
+
+                return matchesPlatform && matchesSearch;
             });
-    </script>
 
+            renderPreorders(filtered);
+        }
+
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+
+        function filterPlatform(platform, btnElement) {
+            currentPlatformFilter = platform;
+
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.style.background = 'rgba(9, 9, 11, 0.8)';
+                b.style.color = '#a1a1aa';
+            });
+            btnElement.style.background = '#a855f7';
+            btnElement.style.color = 'white';
+
+            applyFilters();
+        }
+
+        function toggleCard(cardElement) {
+            cardElement.classList.toggle('expanded');
+        }
+
+        async function deleteGame(title, platform) {
+            if (!confirm(`Usunąć "${title}"?`)) return;
+            await fetch('https://preorder-api-pdjz.onrender.com/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, platform, user_id: parseInt(userId) })
+            });
+            window.location.reload();
+        }
+
+        async function moveToCollection(title, platform) {
+            if (!confirm(`Przenieść "${title}" do kolekcji?`)) return;
+            await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, platform, user_id: parseInt(userId) })
+            });
+            window.location.reload();
+        }
+
+        // Obsługa zwijania i rozwijania kosztorysu
+        function toggleSummary() {
+            const content = document.getElementById('summary-content');
+            const chevron = document.getElementById('summary-chevron');
+            
+            // Jeśli jest zwinięty (maxHeight to 0px), to go rozwiń
+            if (content.style.maxHeight === '0px') {
+                content.style.maxHeight = '2000px';
+                content.style.opacity = '1';
+                content.style.marginTop = '12px';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                // Jeśli jest rozwinięty, to go zwiń
+                content.style.maxHeight = '0px';
+                content.style.opacity = '0';
+                content.style.marginTop = '0px';
+                chevron.style.transform = 'rotate(-180deg)';
+            }
+        }
+
+        // UX Bonus: Automatycznie zwijaj kosztorys na start dla małych ekranów (telefonów)
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                const content = document.getElementById('summary-content');
+                if (content && content.style.maxHeight !== '0px') {
+                    toggleSummary();
+                }
+            }, 100);
+        }
+
+        // Rejestracja Service Workera PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker zarejestrowany', reg))
+                    .catch(err => console.error('Błąd rejestracji Service Workera', err));
+            });
+        }
+    </script>
 </body>
 </html>
