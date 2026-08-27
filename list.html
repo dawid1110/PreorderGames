@@ -140,6 +140,25 @@
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
+        /* --- POPRAWKA NA ZWIJAJĄCĄ SIĘ DATĘ --- */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .card-header > div:first-child {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; 
+        }
+        .release-date {
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap !important;
+        }
     </style>
 </head>
 <body>
