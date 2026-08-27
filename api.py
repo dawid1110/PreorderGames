@@ -334,12 +334,21 @@ async def send_weekly_summary(user_id: int):
             platform = game.get("platform", "N/A")
             offers = game.get("offers", [])
             
-            cheapest_price = min([o.get("price", 0) for o in offers]) if offers else 0
+            # Szukamy najtańszej oferty oraz sklepu
+            cheapest_price = 0
+            cheapest_store = "Brak ofert"
             
+            if offers:
+                # Znajduje cały obiekt oferty z najniższą ceną
+                cheapest_offer = min(offers, key=lambda o: o.get("price", float('inf')))
+                cheapest_price = cheapest_offer.get("price", 0)
+                # Obsługuje zarówno store_name, jak i store
+                cheapest_store = cheapest_offer.get("store_name") or cheapest_offer.get("store") or "Nieznany sklep"
+
             message += f"🎮 *{title}*\n"
             message += f"📅 Premiera: `{g_date.strftime('%d.%m.%Y')}`\n"
             message += f"🕹️ Platforma: `{platform}`\n"
-            message += f"💰 Najniższa cena: `{cheapest_price:.2f} zł`\n"
+            message += f"💰 Najniższa cena: `{cheapest_price:.2f} zł` (*{cheapest_store}*)\n"
             
             # Jeśli jest numer zamówienia, dodaj go
             order_nums = [str(o.get("order_number") or o.get("orderNumber")) for o in offers if (o.get("order_number") or o.get("orderNumber"))]
