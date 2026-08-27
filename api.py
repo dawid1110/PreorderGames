@@ -9,7 +9,7 @@ import libsql_client
 
 app = FastAPI()
 
-TELEGRAM_BOT_TOKEN = "8610360413:AAFpmUCUsQ39EB9lrfno_8T7-LxMWF2bhj4"
+TELEGRAM_BOT_TOKEN = "8805837024:AAF7w97n81Xu5V6DkyUgcqztsAz_o_jU4Xc"
 TELEGRAM_CHAT_ID = "8457539262"
 
 # Konfiguracja CORS
