@@ -104,6 +104,42 @@
                 grid-template-columns: 1fr; /* Wymuszenie 1 kolumny na telefonach */
             }
         }
+        /* Styl dla checkboxa "Uwzględnij w kosztorysie" */
+        .budget-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            cursor: pointer;
+            user-select: none;
+        }
+        .budget-checkbox-wrapper input[type="checkbox"] {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: rgba(9, 9, 11, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .budget-checkbox-wrapper input[type="checkbox"]:checked {
+            background: #a855f7;
+            border-color: #a855f7;
+        }
+        .budget-checkbox-wrapper input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
     </style>
 </head>
 <body>
@@ -206,6 +242,25 @@
             return new Date(year, month, day).getTime();
         }
 
+        // Pobieranie zapisanego stanu checkboxów z przeglądarki
+        function getBudgetStates() {
+            try {
+                return JSON.parse(localStorage.getItem('preorder_budget_states') || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        // Zmiana stanu checkboxa i natychmiastowe przeliczenie kosztorysu
+        function toggleBudgetState(gameKey, isChecked) {
+            const states = getBudgetStates();
+            states[gameKey] = isChecked;
+            localStorage.setItem('preorder_budget_states', JSON.stringify(states));
+            
+            // Przelicz kosztorys na żywo na podstawie aktualnie przefiltrowanych gier
+            applyFilters();
+        }
+
         // Pobieranie danych
         fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`)
             .then(response => {
@@ -228,6 +283,8 @@
         // Generowanie kosztorysu
         function updateSummary(data) {
             const summaryContainer = document.getElementById('monthly-summary');
+            const budgetStates = getBudgetStates();
+            
             if (data.length === 0) {
                 summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel bezpieczny!</p>';
                 return;
@@ -237,6 +294,13 @@
             let grandTotal = 0;
 
             data.forEach(game => {
+                const gameKey = `${game.platform}_${game.title}`;
+                // Domyślnie (jeśli nie było jeszcze ruszane) gra jest wliczana do budżetu (true)
+                const isIncluded = budgetStates[gameKey] !== undefined ? budgetStates[gameKey] : true;
+
+                // Jeśli gra jest odznaczona (zastanawiam się), pomijamy ją w kosztorysie
+                if (!isIncluded) return;
+
                 if (game.offers && game.offers.length > 0) {
                     const cheapestPrice = Math.min(...game.offers.map(o => o.price));
                     
@@ -263,6 +327,11 @@
                 }
             });
 
+            if (grandTotal === 0) {
+                summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak zaznaczonych preorderów w kosztorysie.</p>';
+                return;
+            }
+
             const sortedMonths = Object.keys(monthlyCosts).sort();
             const tableRows = sortedMonths.map(key => `
                 <tr>
@@ -287,6 +356,7 @@
         // Renderowanie listy gier
         function renderPreorders(preorders) {
             const container = document.getElementById('games-container');
+            const budgetStates = getBudgetStates();
 
             if (preorders.length === 0) {
                 container.innerHTML = `<div class="empty-state">Brak preorderów spełniających kryteria.</div>`;
@@ -294,6 +364,9 @@
             }
 
             const cardsHtml = preorders.map((game, index) => {
+                const gameKey = `${game.platform}_${game.title}`;
+                const isChecked = budgetStates[gameKey] !== undefined ? budgetStates[gameKey] : true;
+
                 const cheapestPrice = game.offers && game.offers.length > 0 
                     ? Math.min(...game.offers.map(o => o.price)) 
                     : 0;
@@ -350,6 +423,14 @@
                             <span class="preview-price">Od ${cheapestPrice.toFixed(2)} zł</span>
                         </div>
 
+                        <!-- Checkbox kontrolujący udział w kosztorysie -->
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;" onclick="event.stopPropagation()">
+                            <label class="budget-checkbox-wrapper">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleBudgetState('${gameKey}', this.checked)">
+                                Wliczaj do kosztorysu
+                            </label>
+                        </div>
+
                         <div class="offers-wrapper">
                             <div class="offers-list">
                                 ${offersHtml}
@@ -379,6 +460,7 @@
                 return matchesPlatform && matchesSearch;
             });
 
+            updateSummary(filtered); // Przeliczamy kosztorys dla widocznych gier!
             renderPreorders(filtered);
         }
 
