@@ -1,11 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import requests
+from datetime import datetime, timedelta
 import hashlib
 import secrets
 import os
 import libsql_client
 
 app = FastAPI()
+
+TELEGRAM_BOT_TOKEN = "8610360413:AAFpmUCUsQ39EB9lrfno_8T7-LxMWF2bhj4"
+TELEGRAM_CHAT_ID = "8457539262"
 
 # Konfiguracja CORS
 app.add_middleware(
@@ -280,3 +285,79 @@ async def delete_from_collection(data: dict):
     except Exception as e:
         await client.close()
         raise HTTPException(status_code=500, detail=str(e))
+
+def parse_game_date(date_str: str):
+    """Pomocnicza funkcja parsująca różne formaty dat z bazy."""
+    if not date_str:
+        return None
+    try:
+        if "." in date_str:
+            parts = date_str.split(".")
+            return datetime(int(parts[2]), int(parts[1]), int(parts[0])).date()
+        elif "-" in date_str:
+            parts = date_str.split("-")
+            year, month = int(parts[0]), int(parts[1])
+            day = int(parts[2]) if len(parts) > 2 else 1
+            return datetime(year, month, day).date()
+    except Exception:
+        return None
+    return None
+
+@app.get("/cron/weekly_summary")
+def send_weekly_summary(user_id: int):
+    # 1. Pobierz preordery użytkownika z bazy
+    # (Zmień poniższe get_user_preorders(user_id) na swoją funkcję pobierającą dane z bazy!)
+    preorders = get_user_preorders(user_id) 
+
+    # 2. Wyznacz zakres dat dla bieżącego tygodnia (Poniedziałek - Niedziela)
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+
+    # 3. Filtruj premiery na ten tydzień
+    this_week_games = []
+    for game in preorders:
+        g_date = parse_game_date(game.get("release_date"))
+        if g_date and monday <= g_date <= sunday:
+            this_week_games.append((g_date, game))
+
+    # Sortuj gry chronologicznie
+    this_week_games.sort(key=lambda x: x[0])
+
+    # 4. Formatowanie wiadomości Telegram
+    if not this_week_games:
+        message = "📅 *Preorder Hub — Podsumowanie Tygodnia*\n\nW tym tygodniu brak premier. Portfel bezpieczny! 🎮"
+    else:
+        message = f"🚨 *PREMIERY W TYM TYGODNIU ({monday.strftime('%d.%m')} - {sunday.strftime('%d.%m')})* 🚨\n\n"
+        for g_date, game in this_week_games:
+            title = game.get("title")
+            platform = game.get("platform", "N/A")
+            offers = game.get("offers", [])
+            
+            cheapest_price = min([o.get("price", 0) for o in offers]) if offers else 0
+            
+            message += f"🎮 *{title}*\n"
+            message += f"📅 Premiera: `{g_date.strftime('%d.%m.%Y')}`\n"
+            message += f"🕹️ Platforma: `{platform}`\n"
+            message += f"💰 Najniższa cena: `{cheapest_price:.2f} zł`\n"
+            
+            # Jeśli jest numer zamówienia, dodaj go
+            order_nums = [str(o.get("order_number") or o.get("orderNumber")) for o in offers if (o.get("order_number") or o.get("orderNumber"))]
+            if order_nums:
+                message += f"📦 Nr zamówienia: `{', '.join(order_nums)}`\n"
+            
+            message += "-----------------------------------\n"
+
+    # 5. Wysyłka przez Telegram Bot API
+    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    
+    response = requests.post(telegram_url, json=payload)
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Błąd wysyłania wiadomości na Telegram")
+
+    return {"status": "success", "sent_games_count": len(this_week_games)}
