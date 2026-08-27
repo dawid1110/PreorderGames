@@ -64,6 +64,38 @@
             background: rgba(34, 197, 94, 0.15);
             color: #22c55e;
         }
+        /* --- NAPRAWA NAKŁADANIA SIĘ ELEMENTÓW (LAYOUT) --- */
+
+        .list-layout {
+            display: grid;
+            /* Sztywny podział: lewa strona bierze całą wolną przestrzeń (1fr), prawa (kosztorys) ma równe 320px */
+            grid-template-columns: 1fr 320px;
+            gap: 32px; /* Duży, bezpieczny odstęp między grami a panelem */
+            align-items: start; 
+        }
+
+        .games-grid {
+            display: grid;
+            /* Sztywne 3 kolumny. Funkcja minmax(0, 1fr) to klucz - zapobiega uciekaniu kafelków za krawędź! */
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+
+        .summary-sidebar {
+            width: 100%;
+            /* Panel "przyklei się" do góry ekranu podczas scrollowania listy gier */
+            position: sticky; 
+            top: 24px;
+            z-index: 10;
+        }
+
+        /* Zabezpieczenie dla wąskich ekranów (np. tablety w pionie), żeby gry nie były ściśnięte jak sardynki */
+        @media (max-width: 1100px) {
+            .list-layout {
+                grid-template-columns: 1fr; /* Kosztorys spada pod/nad listę gier */
+            }
+        }
     </style>
 </head>
 <body>
