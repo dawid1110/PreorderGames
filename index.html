@@ -17,117 +17,120 @@
             margin-top: 40px;
         }
         /* --- STYLE KALENDARZA --- */
-.calendar-container {
-    background: rgba(24, 24, 27, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-    backdrop-filter: blur(16px);
-    margin-top: 24px;
-}
-.cal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-.cal-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-.cal-btn:hover {
-    background: rgba(168, 85, 247, 0.2);
-    border-color: #a855f7;
-}
-.cal-month-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    margin: 0;
-}
-.cal-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-size: 0.8rem;
-    color: #a1a1aa;
-    margin-bottom: 8px;
-}
-.cal-days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    text-align: center;
-}
-.cal-day {
-    padding: 10px 0;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    color: #d4d4d8;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.cal-day.empty {
-    visibility: hidden;
-}
-.cal-day:not(.empty):hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-/* Dzień, w którym jest premiera */
-.cal-day.has-game {
-    background: rgba(168, 85, 247, 0.15);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    color: #e9d5ff;
-    font-weight: 600;
-    box-shadow: inset 0 0 8px rgba(168, 85, 247, 0.2);
-}
-/* Kliknięty, aktywny dzień */
-.cal-day.active {
-    background: #a855f7 !important;
-    color: white !important;
-    border-color: #a855f7 !important;
-    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4) !important;
-}
-/* Sekcja z detalami premier po kliknięciu */
-.cal-details {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-.cal-details-date {
-    font-size: 0.85rem;
-    color: #a855f7;
-    margin-bottom: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.cal-game-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: rgba(9, 9, 11, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    margin-bottom: 8px;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+    .calendar-container {
+        background: rgba(24, 24, 27, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 20px;
+        backdrop-filter: blur(16px);
+        /* Wyśrodkowanie i ograniczenie szerokości */
+        margin: 32px auto 0 auto; 
+        max-width: 450px; 
+        width: 100%;
+    }
+    .cal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .cal-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .cal-btn:hover {
+        background: rgba(168, 85, 247, 0.2);
+        border-color: #a855f7;
+    }
+    .cal-month-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+    }
+    .cal-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-size: 0.8rem;
+        color: #a1a1aa;
+        margin-bottom: 8px;
+    }
+    .cal-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        text-align: center;
+    }
+    .cal-day {
+        padding: 10px 0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        color: #d4d4d8;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .cal-day.empty {
+        visibility: hidden;
+    }
+    .cal-day:not(.empty):hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    /* Dzień, w którym jest premiera */
+    .cal-day.has-game {
+        background: rgba(168, 85, 247, 0.15);
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        color: #e9d5ff;
+        font-weight: 600;
+        box-shadow: inset 0 0 8px rgba(168, 85, 247, 0.2);
+    }
+    /* Kliknięty, aktywny dzień */
+    .cal-day.active {
+        background: #a855f7 !important;
+        color: white !important;
+        border-color: #a855f7 !important;
+        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4) !important;
+    }
+    /* Sekcja z detalami premier po kliknięciu */
+    .cal-details {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .cal-details-date {
+        font-size: 0.85rem;
+        color: #a855f7;
+        margin-bottom: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .cal-game-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(9, 9, 11, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     </style>
 </head>
 <body>

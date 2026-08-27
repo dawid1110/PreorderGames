@@ -113,13 +113,21 @@
             </div>
 
             <aside class="summary-sidebar">
-                <div class="summary-card" style="animation-delay: 0.2s;">
-                    <div class="summary-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
-                        <h3>Kosztorys</h3>
+                <div class="summary-card" id="summary-card" style="animation-delay: 0.2s;">
+                    <!-- Interaktywny nagłówek z ikonką strzałki -->
+                    <div class="summary-header" onclick="toggleSummary()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                            <h3 style="margin: 0;">Kosztorys</h3>
+                        </div>
+                        <svg id="summary-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
-                    <p class="summary-subtitle">Najniższe prognozowane ceny</p>
-                    <div id="monthly-summary"></div>
+                    
+                    <!-- Zwijany kontener z zawartością -->
+                    <div id="summary-content" style="max-height: 2000px; overflow: hidden; transition: max-height 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease; opacity: 1; margin-top: 12px;">
+                        <p class="summary-subtitle" style="margin-top: 0;">Najniższe prognozowane ceny</p>
+                        <div id="monthly-summary"></div>
+                    </div>
                 </div>
             </aside>
         </div>
@@ -371,6 +379,35 @@
                 body: JSON.stringify({ title, platform, user_id: parseInt(userId) })
             });
             window.location.reload();
+        }
+        // Obsługa zwijania i rozwijania kosztorysu
+        function toggleSummary() {
+            const content = document.getElementById('summary-content');
+            const chevron = document.getElementById('summary-chevron');
+            
+            // Jeśli jest zwinięty (maxHeight to 0px), to go rozwiń
+            if (content.style.maxHeight === '0px') {
+                content.style.maxHeight = '2000px';
+                content.style.opacity = '1';
+                content.style.marginTop = '12px';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                // Jeśli jest rozwinięty, to go zwiń
+                content.style.maxHeight = '0px';
+                content.style.opacity = '0';
+                content.style.marginTop = '0px';
+                chevron.style.transform = 'rotate(-180deg)';
+            }
+        }
+
+        // UX Bonus: Automatycznie zwijaj kosztorys na start dla małych ekranów (telefonów)
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                const content = document.getElementById('summary-content');
+                if (content && content.style.maxHeight !== '0px') {
+                    toggleSummary();
+                }
+            }, 100);
         }
 
         // Rejestracja Service Workera PWA
