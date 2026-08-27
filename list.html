@@ -64,19 +64,18 @@
             background: rgba(34, 197, 94, 0.15);
             color: #22c55e;
         }
-        /* --- NAPRAWA NAKŁADANIA SIĘ ELEMENTÓW (LAYOUT) --- */
+        
+        /* --- NAPRAWA NAKŁADANIA SIĘ ELEMENTÓW ORAZ RESPONSYWNOŚĆ --- */
 
         .list-layout {
             display: grid;
-            /* Sztywny podział: lewa strona bierze całą wolną przestrzeń (1fr), prawa (kosztorys) ma równe 320px */
             grid-template-columns: 1fr 320px;
-            gap: 32px; /* Duży, bezpieczny odstęp między grami a panelem */
+            gap: 32px;
             align-items: start; 
         }
 
         .games-grid {
             display: grid;
-            /* Sztywne 3 kolumny. Funkcja minmax(0, 1fr) to klucz - zapobiega uciekaniu kafelków za krawędź! */
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
             width: 100%;
@@ -84,16 +83,25 @@
 
         .summary-sidebar {
             width: 100%;
-            /* Panel "przyklei się" do góry ekranu podczas scrollowania listy gier */
             position: sticky; 
             top: 24px;
             z-index: 10;
         }
 
-        /* Zabezpieczenie dla wąskich ekranów (np. tablety w pionie), żeby gry nie były ściśnięte jak sardynki */
+        /* 1. TABLETY I MNIEJSZE EKRANY */
         @media (max-width: 1100px) {
             .list-layout {
-                grid-template-columns: 1fr; /* Kosztorys spada pod/nad listę gier */
+                grid-template-columns: 1fr; /* Kosztorys ląduje pod listą gier */
+            }
+            .games-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* Przejście na 2 kolumny */
+            }
+        }
+
+        /* 2. TELEFONY (Główna poprawka zgniatania) */
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr; /* Wymuszenie 1 kolumny na telefonach */
             }
         }
     </style>
@@ -412,6 +420,7 @@
             });
             window.location.reload();
         }
+
         // Obsługa zwijania i rozwijania kosztorysu
         function toggleSummary() {
             const content = document.getElementById('summary-content');
