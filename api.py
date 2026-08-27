@@ -307,7 +307,7 @@ def parse_game_date(date_str: str):
 def send_weekly_summary(user_id: int):
     # 1. Pobierz preordery użytkownika z bazy
     # (Zmień poniższe get_user_preorders(user_id) na swoją funkcję pobierającą dane z bazy!)
-    preorders = get_user_preorders(user_id) 
+    preorders = get_preorders(user_id) 
 
     # 2. Wyznacz zakres dat dla bieżącego tygodnia (Poniedziałek - Niedziela)
     today = datetime.now().date()
