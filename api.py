@@ -371,3 +371,8 @@ async def send_weekly_summary(user_id: int):
         raise HTTPException(status_code=500, detail=f"Błąd Telegrama: {response.text}")
 
     return {"status": "success", "sent_games_count": len(this_week_games)}
+
+@app.get("/ping")
+def keep_alive():
+    """Zwraca natychmiastową odpowiedź, aby powstrzymać serwer przed uśpieniem."""
+    return {"status": "ok", "message": "Server is awake"}
