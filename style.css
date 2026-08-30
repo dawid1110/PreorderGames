@@ -201,6 +201,24 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); curso
 .btn-collect-game, .btn-delete-game { background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease, color 0.2s ease; }
 .btn-collect-game:hover { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
 .btn-delete-game:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; transform: scale(1.1); }
+.btn-store {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-store:hover {
+    background: #a855f7;
+    color: #ffffff;
+    transform: scale(1.05);
+}
 
 /* Oferty (Zwijanie i układ) */
 .offers-wrapper { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
