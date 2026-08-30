@@ -8,6 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Preorder Hub | Moja Lista</title>
+    <!-- Cały styl przenieśliśmy do pliku style.css -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -89,17 +90,15 @@
 
         // Pomocnicza funkcja do zamiany daty na wartość liczbową do sortowania
         function parseDate(dateStr) {
-            if (!dateStr) return Number.MAX_SAFE_INTEGER; // Brak daty na sam koniec
+            if (!dateStr) return Number.MAX_SAFE_INTEGER;
             let parts, year, month, day = 1;
             
             if (dateStr.includes('.')) {
-                // Format DD.MM.YYYY
                 parts = dateStr.split('.');
                 day = parseInt(parts[0], 10) || 1;
-                month = parseInt(parts[1], 10) - 1; // Miesiące w JS są od 0
+                month = parseInt(parts[1], 10) - 1;
                 year = parseInt(parts[2], 10);
             } else if (dateStr.includes('-')) {
-                // Format YYYY-MM-DD lub YYYY-MM
                 parts = dateStr.split('-');
                 year = parseInt(parts[0], 10);
                 month = parseInt(parts[1], 10) - 1;
@@ -110,36 +109,44 @@
             return new Date(year, month, day).getTime();
         }
 
-        // Pobieranie zapisanego stanu checkboxów z przeglądarki
-        function getBudgetStates() {
+        // Zmiana stanu checkboxa, natychmiastowe przeliczenie i wysłanie do bazy
+        async function toggleBudgetState(encodedTitle, platform, isChecked) {
+            const decodedTitle = decodeURIComponent(encodedTitle);
+            
+            // Najpierw aktualizujemy lokalną tablicę (brak lagów w interfejsie)
+            const game = allPreorders.find(g => g.title === decodedTitle && g.platform === platform);
+            if (game) {
+                game.in_budget = isChecked;
+            }
+            
+            applyFilters(); // Przelicz kosztorys natychmiast
+
+            // Wyślij nowy stan do API w tle
             try {
-                return JSON.parse(localStorage.getItem('preorder_budget_states') || '{}');
-            } catch (e) {
-                return {};
+                await fetch('https://preorder-api-pdjz.onrender.com/update_budget', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: parseInt(userId), 
+                        title: decodedTitle, 
+                        platform: platform, 
+                        in_budget: isChecked 
+                    })
+                });
+            } catch (error) {
+                console.error('Błąd podczas zapisywania stanu budżetu:', error);
             }
         }
 
-        // Zmiana stanu checkboxa i natychmiastowe przeliczenie kosztorysu
-        function toggleBudgetState(gameKey, isChecked) {
-            const states = getBudgetStates();
-            states[gameKey] = isChecked;
-            localStorage.setItem('preorder_budget_states', JSON.stringify(states));
-            
-            // Przelicz kosztorys na żywo na podstawie aktualnie przefiltrowanych gier
-            applyFilters();
-        }
-
-        // Pobieranie danych
+        // Pobieranie danych z bazy (już z flagami in_budget)
         fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`)
             .then(response => {
                 if (!response.ok) throw new Error('Błąd sieci');
                 return response.json();
             })
             .then(data => {
-                // SORTOWANIE: Od najbliższej do najdalszej premiery
                 data.sort((a, b) => parseDate(a.release_date) - parseDate(b.release_date));
-
-                allPreorders = data; // Zapisujemy posortowane dane do globalnej tablicy
+                allPreorders = data;
                 updateSummary(allPreorders);
                 renderPreorders(allPreorders);
             })
@@ -151,7 +158,6 @@
         // Generowanie kosztorysu
         function updateSummary(data) {
             const summaryContainer = document.getElementById('monthly-summary');
-            const budgetStates = getBudgetStates();
             
             if (data.length === 0) {
                 summaryContainer.innerHTML = '<p style="color: #a1a1aa; text-align: center;">Brak wydatków. Portfel bezpieczny!</p>';
@@ -162,11 +168,7 @@
             let grandTotal = 0;
 
             data.forEach(game => {
-                const gameKey = `${game.platform}_${game.title}`;
-                // Domyślnie (jeśli nie było jeszcze ruszane) gra jest wliczana do budżetu (true)
-                const isIncluded = budgetStates[gameKey] !== undefined ? budgetStates[gameKey] : true;
-
-                // Jeśli gra jest odznaczona (zastanawiam się), pomijamy ją w kosztorysie
+                const isIncluded = game.in_budget !== undefined ? game.in_budget : true;
                 if (!isIncluded) return;
 
                 if (game.offers && game.offers.length > 0) {
@@ -224,7 +226,6 @@
         // Renderowanie listy gier
         function renderPreorders(preorders) {
             const container = document.getElementById('games-container');
-            const budgetStates = getBudgetStates();
 
             if (preorders.length === 0) {
                 container.innerHTML = `<div class="empty-state">Brak preorderów spełniających kryteria.</div>`;
@@ -232,8 +233,7 @@
             }
 
             const cardsHtml = preorders.map((game, index) => {
-                const gameKey = `${game.platform}_${game.title}`;
-                const isChecked = budgetStates[gameKey] !== undefined ? budgetStates[gameKey] : true;
+                const isChecked = game.in_budget !== undefined ? game.in_budget : true;
 
                 const cheapestPrice = game.offers && game.offers.length > 0 
                     ? Math.min(...game.offers.map(o => o.price)) 
@@ -274,10 +274,10 @@
                             </div>
                             
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Odbierz i przenieś do kolekcji">
+                                <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection('${encodedTitle}', '${game.platform}')" title="Odbierz i przenieś do kolekcji">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
-                                <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame(decodeURIComponent('${encodedTitle}'), '${game.platform}')" title="Usuń preorder">
+                                <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame('${encodedTitle}', '${game.platform}')" title="Usuń preorder">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </button>
                                 <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -291,10 +291,9 @@
                             <span class="preview-price">Od ${cheapestPrice.toFixed(2)} zł</span>
                         </div>
 
-                        <!-- Checkbox kontrolujący udział w kosztorysie -->
                         <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;" onclick="event.stopPropagation()">
                             <label class="budget-checkbox-wrapper">
-                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleBudgetState('${gameKey}', this.checked)">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleBudgetState('${encodedTitle}', '${game.platform}', this.checked)">
                                 Wliczaj do kosztorysu
                             </label>
                         </div>
@@ -328,7 +327,7 @@
                 return matchesPlatform && matchesSearch;
             });
 
-            updateSummary(filtered); // Przeliczamy kosztorys dla widocznych gier!
+            updateSummary(filtered);
             renderPreorders(filtered);
         }
 
@@ -351,7 +350,8 @@
             cardElement.classList.toggle('expanded');
         }
 
-        async function deleteGame(title, platform) {
+        async function deleteGame(encodedTitle, platform) {
+            const title = decodeURIComponent(encodedTitle);
             if (!confirm(`Usunąć "${title}"?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/delete', {
                 method: 'DELETE',
@@ -361,7 +361,8 @@
             window.location.reload();
         }
 
-        async function moveToCollection(title, platform) {
+        async function moveToCollection(encodedTitle, platform) {
+            const title = decodeURIComponent(encodedTitle);
             if (!confirm(`Przenieść "${title}" do kolekcji?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
                 method: 'POST',
@@ -371,19 +372,16 @@
             window.location.reload();
         }
 
-        // Obsługa zwijania i rozwijania kosztorysu
         function toggleSummary() {
             const content = document.getElementById('summary-content');
             const chevron = document.getElementById('summary-chevron');
             
-            // Jeśli jest zwinięty (maxHeight to 0px), to go rozwiń
             if (content.style.maxHeight === '0px') {
                 content.style.maxHeight = '2000px';
                 content.style.opacity = '1';
                 content.style.marginTop = '12px';
                 chevron.style.transform = 'rotate(0deg)';
             } else {
-                // Jeśli jest rozwinięty, to go zwiń
                 content.style.maxHeight = '0px';
                 content.style.opacity = '0';
                 content.style.marginTop = '0px';
@@ -391,7 +389,6 @@
             }
         }
 
-        // UX Bonus: Automatycznie zwijaj kosztorys na start dla małych ekranów (telefonów)
         if (window.innerWidth <= 768) {
             setTimeout(() => {
                 const content = document.getElementById('summary-content');
@@ -401,7 +398,6 @@
             }, 100);
         }
 
-        // Rejestracja Service Workera PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
