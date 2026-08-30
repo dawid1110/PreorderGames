@@ -1,7 +1,6 @@
 /* ====================================================
    1. ZMIENNE GLOBALNE I BAZA
    ==================================================== */
-/* Globalne resetowanie i blokada szerokości na telefonach */
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -29,11 +28,8 @@ body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-main);
-    margin: 0;
-    padding: 0;
     min-height: 100vh;
     position: relative;
-    overflow-x: hidden;
 }
 
 .container {
@@ -42,7 +38,6 @@ body {
     padding: 40px 24px;
 }
 
-/* Klawisz powrotu używany na podstronach */
 .back-link {
     display: inline-flex;
     align-items: center;
@@ -56,80 +51,46 @@ body {
     color: var(--text-main);
 }
 
-/* Kluczowe klatki animacji */
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes slideUp {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
 
-/* ====================================================
-   2. STYL SZKLANY: LISTA PREORDERÓW I MENU GŁÓWNE
-   ==================================================== */
-
-/* Dekoracyjne rozmyte kule w tle */
-.bg-glow {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    z-index: -1;
-    opacity: 0.4;
-}
+/* Tło i Nagłówki */
+.bg-glow { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.4; }
 .bg-glow-1 { top: -100px; left: -100px; width: 400px; height: 400px; background: #3b82f6; }
 .bg-glow-2 { bottom: 10%; right: -50px; width: 350px; height: 350px; background: #8b5cf6; }
 
 .app-header { text-align: center; margin-bottom: 50px; }
-.gradient-text {
-    font-size: 3rem;
-    font-weight: 800;
-    margin: 0 0 10px 0;
-    background: linear-gradient(to right, #60a5fa, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -1px;
-}
+.gradient-text { font-size: 3rem; font-weight: 800; margin: 0 0 10px 0; background: linear-gradient(to right, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
 .subtitle { color: var(--text-muted); font-size: 1.1rem; margin: 0; }
 
-/* 2.A: Siatka Listy Gier (list.html) */
-.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
-.game-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--card-border);
+/* ====================================================
+   2. AUTORYZACJA (Logowanie / Rejestracja)
+   ==================================================== */
+.auth-card {
+    background: rgba(24, 24, 27, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
-    padding: 24px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    opacity: 0;
-    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    margin: 0 auto;
 }
-.game-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.15);
-}
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.platform-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; background: rgba(255, 255, 255, 0.1); color: #fff; text-transform: uppercase; }
-.platform-ps5 { background: #00439c; }
-.platform-ns2 { background: #e60012; }
-.release-date { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
-.game-title { font-size: 1.4rem; font-weight: 600; margin: 0 0 20px 0; line-height: 1.3; }
+.btn-auth { width: 100%; padding: 12px; background: #a855f7; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+.btn-auth:hover { background: #9333ea; }
+.auth-footer { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #a1a1aa; }
+.auth-footer a { color: #a855f7; text-decoration: none; font-weight: 500; }
+.auth-footer a:hover { text-decoration: underline; }
+.error-msg { color: #ef4444; font-size: 0.85rem; margin-bottom: 15px; text-align: center; display: none; }
+.success-msg { color: #22c55e; font-size: 0.85rem; margin-bottom: 15px; text-align: center; display: none; }
 
-/* Lista ofert w kartach */
-.offers-list { display: flex; flex-direction: column; gap: 10px; }
-.offer-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 12px; }
-.store-name { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.95rem; color: #e4e4e7; }
-.offer-right { display: flex; align-items: center; gap: 16px; }
-.price { color: var(--success); font-weight: 700; font-size: 1.05rem; min-width: 85px; text-align: right; }
-.btn-store { background: var(--primary); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1px solid transparent; }
-.btn-store:hover { background: var(--primary-hover); transform: scale(1.05); }
-
-/* Stany ładowania i błędu */
-.loading-state, .error-state, .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: var(--text-muted); text-align: center; }
-.spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
-
-/* 2.B: Menu Główne (index.html) */
-.dashboard-container { max-width: 900px; }
-.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 20px; }
+/* ====================================================
+   3. MENU GŁÓWNE I KALENDARZ
+   ==================================================== */
+.dashboard-container { max-width: 1000px; }
+.modules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 40px; }
 .module-card { display: flex; flex-direction: column; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 20px; padding: 35px 30px; text-decoration: none; color: var(--text-main); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); opacity: 0; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; cursor: pointer; }
 .module-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6); border-color: rgba(255, 255, 255, 0.15); background: rgba(30, 30, 35, 0.75); }
 .module-card:hover .arrow-icon { transform: translateX(6px); }
@@ -141,186 +102,100 @@ body {
 .module-footer { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.05rem; }
 .text-blue { color: #60a5fa; }
 .text-purple { color: #c084fc; }
-.arrow-icon { transition: transform 0.3s ease; }
 
-
-/* ====================================================
-   3. STYL MINIMALISTYCZNY PRO: FORMULARZ (add.html)
-   ==================================================== */
-
-/* Izolujemy ten styl tylko dla podstrony z klasą "minimal-dark" w body */
-body.minimal-dark { background-color: #09090b; color: #ededed; }
-
-.add-container { max-width: 680px; margin-top: 40px; }
-.minimal-nav { margin-bottom: 40px; }
-.minimal-header h1 { font-size: 2.2rem; color: #ffffff; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
-.minimal-header p { color: #a1a1aa; font-size: 1rem; margin-bottom: 40px; }
-
-/* Karta formularza PRO */
-.form-card-pro { background: #121214; border: 1px solid #27272a; border-radius: 12px; padding: 32px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
-.form-section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #71717a; font-weight: 600; margin-bottom: 20px; }
-
-/* Inputy PRO */
-.input-group { margin-bottom: 24px; }
-.input-group label { display: block; font-size: 0.9rem; color: #d4d4d8; margin-bottom: 8px; font-weight: 500; }
-.input-wrapper { position: relative; display: flex; align-items: center; }
-.input-icon { position: absolute; left: 14px; color: #71717a; }
-.input-pro { width: 100%; background: #09090b; border: 1px solid #27272a; color: #ffffff; padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; transition: all 0.2s ease; box-sizing: border-box; }
-.input-wrapper .input-pro { padding-left: 44px; }
-.input-pro:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-.form-row-pro { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.form-divider-pro { height: 1px; background: #27272a; margin: 32px -32px; }
-
-/* Sklepy PRO */
-.offers-header-pro { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.offers-stack { display: flex; flex-direction: column; gap: 12px; }
-.offer-row-pro { display: flex; gap: 12px; align-items: center; background: #18181b; padding: 8px; border-radius: 8px; border: 1px solid #27272a; }
-.offer-inputs { display: grid; grid-template-columns: 2fr 1fr 2fr; gap: 8px; flex-grow: 1; }
-
-/* Przyciski PRO */
-.btn-outline-pro { background: transparent; border: 1px dashed #3f3f46; color: #a1a1aa; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
-.btn-outline-pro:hover { border-color: #d4d4d8; color: #ffffff; }
-.btn-delete-pro { background: transparent; border: none; color: #71717a; padding: 8px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
-.btn-delete-pro:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.form-footer-pro { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #27272a; }
-.btn-solid-pro { background: #ffffff; color: #09090b; border: none; padding: 12px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-.btn-solid-pro:hover { background: #d4d4d8; transform: scale(1.02); }
-.btn-solid-pro:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-@media (max-width: 600px) {
-    .form-row-pro { grid-template-columns: 1fr; gap: 0; }
-    .offer-inputs { grid-template-columns: 1fr; }
-    .offer-row-pro { flex-direction: column; align-items: stretch; padding: 12px; }
-    .btn-delete-pro { align-self: flex-end; }
-}
-
-/* Przycisk usuwania w karcie gry (Kosz) */
-.btn-delete-game {
-    background: transparent;
-    border: none;
-    color: #52525b; /* Domyślnie dyskretny szary */
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-delete-game:hover {
-    background: rgba(239, 68, 68, 0.15); /* Czerwone tło po najechaniu */
-    color: #ef4444; /* Ikona staje się krwiście czerwona */
-    transform: scale(1.1);
-}
+.calendar-container { background: rgba(24, 24, 27, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; backdrop-filter: blur(16px); margin: 32px auto 0 auto; max-width: 450px; width: 100%; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.cal-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; font-size: 1.2rem; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.cal-btn:hover { background: rgba(168, 85, 247, 0.2); border-color: #a855f7; }
+.cal-month-title { font-size: 1.1rem; font-weight: 600; color: #fff; margin: 0; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.8rem; color: #a1a1aa; margin-bottom: 8px; }
+.cal-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.cal-day { padding: 10px 0; border-radius: 8px; font-size: 0.95rem; color: #d4d4d8; cursor: pointer; transition: all 0.2s; }
+.cal-day.empty { visibility: hidden; }
+.cal-day:not(.empty):hover { background: rgba(255, 255, 255, 0.05); }
+.cal-day.has-game { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #e9d5ff; font-weight: 600; box-shadow: inset 0 0 8px rgba(168, 85, 247, 0.2); }
+.cal-day.active { background: #a855f7 !important; color: white !important; border-color: #a855f7 !important; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4) !important; }
+.cal-details { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: none; animation: fadeIn 0.3s ease; }
+.cal-details-date { font-size: 0.85rem; color: #a855f7; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.cal-game-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(9, 9, 11, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 8px; }
 
 /* ====================================================
-   UKŁAD STRONY: PŁYWAJĄCY PANEL KOSZTÓW
+   4. FORMULARZ DODAWANIA GRY
    ==================================================== */
-.list-layout {
-    display: block; /* Oddajemy 100% szerokości dla siatki z grami! */
-}
+.form-card { background: rgba(24, 24, 27, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 24px 16px; backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); margin-top: 16px; animation: fadeIn 0.4s ease-out; }
+@media (min-width: 768px) { .form-card { padding: 40px; border-radius: 20px; } }
+.form-section-title { font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; letter-spacing: 0.02em; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-group input, .form-group select { width: 100%; padding: 14px 16px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #ffffff; font-size: 1rem; outline: none; transition: all 0.2s ease; }
+.form-group input:focus, .form-group select:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15); background: rgba(9, 9, 11, 0.95); }
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+.two-col-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 768px) { .two-col-grid { grid-template-columns: 1fr 1fr; gap: 20px; } }
+.desktop-headers { display: none; }
+@media (min-width: 951px) { .desktop-headers { display: grid; grid-template-columns: 1.8fr 1fr 1.5fr 2fr 44px; gap: 12px; margin-bottom: 8px; padding: 0 4px; } }
+.offer-row { display: grid; grid-template-columns: 1fr; gap: 12px; background: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.06); margin-bottom: 16px; }
+@media (min-width: 951px) { .offer-row { grid-template-columns: 1.8fr 1fr 1.5fr 2fr 44px; background: transparent; padding: 0; border: none; margin-bottom: 14px; } }
+.offer-input-group label { display: block; font-size: 0.75rem; font-weight: 500; color: #a1a1aa; margin-bottom: 6px; }
+@media (min-width: 951px) { .offer-input-group label { display: none; } }
+.offer-input { width: 100%; padding: 14px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; color: #ffffff; font-size: 0.95rem; outline: none; transition: all 0.2s; }
+.offer-input:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15); }
+.btn-add-offer { width: 100%; background: rgba(168, 85, 247, 0.08); color: #a855f7; border: 1px dashed rgba(168, 85, 247, 0.35); padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s ease; margin-top: 12px; margin-bottom: 32px; }
+.btn-add-offer:hover { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; }
+.btn-remove-offer { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); width: 100%; padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-top: 4px; font-weight: 600; font-size: 0.9rem; }
+@media (min-width: 951px) { .btn-remove-offer { width: 44px; height: 48px; padding: 0; margin-top: 0; } .btn-remove-offer span { display: none; } }
+.btn-remove-offer:hover { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; }
+.btn-submit { width: 100%; padding: 18px; background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); color: white; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer; box-shadow: 0 10px 20px -5px rgba(168, 85, 247, 0.4); transition: all 0.2s ease; }
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(168, 85, 247, 0.6); }
 
-/* Pływający kontener boczny */
-.summary-sidebar {
-    position: fixed;
-    right: 30px;
-    bottom: 30px; /* Przyklejamy do prawego dolnego rogu */
-    z-index: 1000;
-    width: 320px;
-    pointer-events: none; /* Przepuszcza kliknięcia w puste miejsca... */
-}
+/* ====================================================
+   5. LISTA PREORDERÓW I KOLEKCJA
+   ==================================================== */
+.list-layout { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
+@media (max-width: 1100px) { .list-layout { grid-template-columns: 1fr; } .games-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .games-grid { grid-template-columns: 1fr; } }
+.games-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; width: 100%; }
+.game-card { cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.game-card:hover { border-color: rgba(168, 85, 247, 0.4); }
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.card-header > div:first-child { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.release-date { display: flex !important; align-items: center; gap: 6px; white-space: nowrap !important; }
+.card-preview-info { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.9rem; color: #a1a1aa; }
+.preview-price { color: #a855f7; font-weight: 600; }
+.btn-collect-game, .btn-delete-game { background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: background 0.2s ease, color 0.2s ease; }
+.btn-collect-game:hover { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.btn-delete-game:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; transform: scale(1.1); }
 
-/* Sama Karta Podsumowania */
-.summary-card {
-    pointer-events: auto; /* ...ale karta łapie kliknięcia i scrolla */
-    background: rgba(18, 18, 20, 0.85); /* Nieco mocniejsze tło, żeby teksty z gier pod spodem nie prześwitywały */
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(168, 85, 247, 0.1); /* Delikatna fioletowa poświata na krawędzi */
-    
-    /* Zabezpieczenie przed zbyt długą listą miesięcy */
-    max-height: 60vh; 
-    overflow-y: auto; 
-    
-    opacity: 0;
-    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+/* Oferty (Zwijanie i układ) */
+.offers-wrapper { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.2s ease-out; opacity: 0; }
+.game-card.expanded .offers-wrapper { max-height: 500px; opacity: 1; margin-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 16px; }
+.expand-icon { transition: transform 0.3s ease; }
+.game-card.expanded .expand-icon { transform: rotate(180deg); }
+.offers-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.offer-item { display: flex; flex-direction: column; gap: 12px; background: rgba(9, 9, 11, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 12px; transition: border-color 0.2s; }
+.offer-item:hover { border-color: rgba(168, 85, 247, 0.3); }
+.offer-right { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 
-.summary-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 4px;
-}
+/* Checkbox Kosztorysu */
+.budget-checkbox-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #a1a1aa; cursor: pointer; user-select: none; }
+.budget-checkbox-wrapper input[type="checkbox"] { appearance: none; width: 16px; height: 16px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; cursor: pointer; position: relative; transition: all 0.2s; }
+.budget-checkbox-wrapper input[type="checkbox"]:checked { background: #a855f7; border-color: #a855f7; }
+.budget-checkbox-wrapper input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 4px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 
-.summary-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #ffffff;
-}
+/* Pływający pasek boczny (Kosztorys i Statystyki) */
+.summary-sidebar { width: 100%; position: sticky; top: 24px; z-index: 10; }
+.summary-card { pointer-events: auto; background: rgba(18, 18, 20, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(168, 85, 247, 0.1); max-height: 60vh; overflow-y: auto; opacity: 0; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.summary-header h3 { margin: 0; font-size: 1.25rem; color: #ffffff; }
+.summary-subtitle { color: #a1a1aa; font-size: 0.85rem; margin: 0 0 24px 0; padding-bottom: 16px; border-bottom: 1px dashed rgba(255,255,255,0.15); }
+.summary-table { width: 100%; border-collapse: collapse; }
+.summary-table td { padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.95rem; color: #d4d4d8; }
+.summary-table td.amount { text-align: right; font-weight: 600; color: #38bdf8; }
+.summary-total-row td { border-bottom: none; padding-top: 20px; font-size: 1.15rem; font-weight: 700; color: #ffffff; }
+.summary-total-row td.amount { color: var(--success); }
+.summary-card::-webkit-scrollbar { width: 6px; }
+.summary-card::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
-.summary-subtitle {
-    color: #a1a1aa;
-    font-size: 0.85rem;
-    margin: 0 0 24px 0;
-    padding-bottom: 16px;
-    border-bottom: 1px dashed rgba(255,255,255,0.15);
-}
-
-/* Tabelka z kosztami */
-.summary-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.summary-table td {
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 0.95rem;
-    color: #d4d4d8;
-}
-
-.summary-table td.amount {
-    text-align: right;
-    font-weight: 600;
-    color: #38bdf8;
-}
-
-/* Wiersz z podsumowaniem całkowitym */
-.summary-total-row td {
-    border-bottom: none;
-    padding-top: 20px;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.summary-total-row td.amount {
-    color: var(--success);
-}
-
-/* Subtelny Scrollbar wewnątrz tabelki */
-.summary-card::-webkit-scrollbar {
-    width: 6px;
-}
-.summary-card::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-}
-
-/* Responsywność - na telefonach sidebar wraca na górę jako standardowy blok */
-@media (max-width: 960px) {
-    .summary-sidebar {
-        position: relative;
-        right: auto;
-        bottom: auto;
-        width: 100%;
-        margin-bottom: 30px;
-    }
-    .summary-card {
-        max-height: none;
-    }
-}
+/* Kolekcja Specyficzne */
+.stat-number { font-size: 2rem; font-weight: 700; color: #a855f7; margin-top: 8px; }
+.collection-date { font-size: 0.85rem; color: #a1a1aa; display: flex; align-items: center; gap: 6px; margin-top: 12px; }
