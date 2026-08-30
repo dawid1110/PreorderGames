@@ -174,8 +174,8 @@
             border-radius: 12px;
             padding: 12px;
             display: flex;
-            flex-direction: column; 
-            gap: 8px;
+            flex-direction: column; /* Zawsze układ pionowy, sklep na górze, cena na dole */
+            gap: 12px;
             transition: border-color 0.2s;
         }
 
@@ -185,10 +185,9 @@
 
         .offer-right {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between; /* Cena maksymalnie do lewej, przycisk maksymalnie do prawej */
             align-items: center;
             width: 100%;
-            margin-top: 4px;
         }
 
         .offer-right .price {
@@ -213,19 +212,6 @@
         .btn-store:hover {
             background: #a855f7;
             color: #ffffff;
-        }
-
-        @media (min-width: 450px) {
-            .offer-item {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .offer-right {
-                width: auto;
-                gap: 16px;
-                margin-top: 0;
-            }
         }
     </style>
 </head>
