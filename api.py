@@ -139,14 +139,18 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
     client = get_db_client()
     
     try:
+        # UWAGA: Dodano in_budget do zapytania SQL
         games_res = await client.execute(
-            "SELECT id, title, platform, release_date FROM games WHERE user_id = ?", 
+            "SELECT id, title, platform, release_date, in_budget FROM games WHERE user_id = ?", 
             [current_user]
         )
         
         games_dict = {}
         for game_row in games_res.rows:
-            game_id, title, platform, release_date = game_row
+            # Rozpakowujemy dodatkowe pole w_budzecie
+            game_id, title, platform, release_date = game_row[0], game_row[1], game_row[2], game_row[3]
+            in_budget = bool(game_row[4]) if len(game_row) > 4 and game_row[4] is not None else True
+            
             key = (title.strip().lower(), platform.strip().lower())
             
             offers_res = await client.execute(
@@ -171,6 +175,7 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
                     "title": title,
                     "platform": platform,
                     "release_date": release_date,
+                    "in_budget": in_budget, # <--- Tutaj przekazujemy stan do frontendu
                     "offers": offers
                 }
                 
@@ -378,3 +383,23 @@ async def send_weekly_summary(user_id: int):
 def keep_alive():
     """Endpoint dla UptimeRobot / Crona zapobiegający usypianiu serwera na Render"""
     return {"status": "ok", "message": "Preorder API is running!"}
+
+@app.post("/update_budget")
+async def update_budget(data: dict, current_user: int = Depends(get_current_user)):
+    title = data.get("title")
+    platform = data.get("platform")
+    in_budget = data.get("in_budget", True)
+    
+    in_budget_int = 1 if in_budget else 0
+    
+    client = get_db_client()
+    try:
+        await client.execute(
+            "UPDATE games SET in_budget = ? WHERE user_id = ? AND title = ? AND platform = ?",
+            [in_budget_int, current_user, title, platform]
+        )
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await client.close()
