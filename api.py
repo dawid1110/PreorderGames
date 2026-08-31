@@ -373,3 +373,8 @@ async def send_weekly_summary(user_id: int):
         return {"status": "success", "sent_games_count": len(this_week_games)}
     finally:
         await client.close()
+
+@app.get("/ping")
+def keep_alive():
+    """Endpoint dla UptimeRobot / Crona zapobiegający usypianiu serwera na Render"""
+    return {"status": "ok", "message": "Preorder API is running!"}
