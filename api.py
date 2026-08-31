@@ -60,6 +60,10 @@ def hash_password(password: str) -> str:
     return f"{salt}${pwd_hash}"
 
 def verify_password(password: str, stored_hash: str) -> bool:
+    # Jeśli hasło w bazie nie ma $, traktujemy je jako zwykły tekst (leniwa migracja)
+    if "$" not in stored_hash:
+        return password == stored_hash
+        
     try:
         salt, pwd_hash = stored_hash.split('$')
         check_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
@@ -101,17 +105,12 @@ async def register(data: dict):
 
 @app.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # OAuth2 wymusza przesyłanie loginu/hasła jako x-www-form-urlencoded (wypełniane automatycznie przez formularz)
     username = form_data.username.strip()
     password = form_data.password.strip()
     
     client = get_db_client()
     try:
-        res = await client.execute(
-            "SELECT id, password_hash FROM users WHERE username = ?",
-            [username]
-        )
-        
+        res = await client.execute("SELECT id, password_hash FROM users WHERE username = ?", [username])
         if not res.rows:
             raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
             
@@ -120,10 +119,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         if not verify_password(password, password_hash):
             raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
             
-        # Generowanie bezpiecznego tokena na podstawie ID użytkownika
+        # Zapisujemy nowe, bezpieczne hasło, jeśli było czystym tekstem
+        if "$" not in password_hash:
+            new_safe_hash = hash_password(password)
+            await client.execute("UPDATE users SET password_hash = ? WHERE id = ?", [new_safe_hash, user_id])
+            
         access_token = create_access_token(data={"sub": str(user_id)})
-        
-        # Zwracana struktura wymuszona przez specyfikację OAuth2
         return {"access_token": access_token, "token_type": "bearer", "user_id": user_id, "username": username}
     finally:
         await client.close()
