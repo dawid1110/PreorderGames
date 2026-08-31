@@ -84,7 +84,9 @@
 
         // Sprawdzenie autoryzacji
         const userId = localStorage.getItem('user_id');
-        if (!userId) {
+        const token = localStorage.getItem('access_token');
+        
+        if (!userId || !token) {
             window.location.href = 'login.html';
         }
 
@@ -125,7 +127,10 @@
             try {
                 await fetch('https://preorder-api-pdjz.onrender.com/update_budget', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
                     body: JSON.stringify({ 
                         user_id: parseInt(userId), 
                         title: decodedTitle, 
@@ -139,7 +144,11 @@
         }
 
         // Pobieranie danych z bazy (już z flagami in_budget)
-        fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`)
+        fetch(`https://preorder-api-pdjz.onrender.com/get_preorders`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(response => {
                 if (!response.ok) throw new Error('Błąd sieci');
                 return response.json();
@@ -152,7 +161,7 @@
             })
             .catch(error => {
                 console.error('Błąd:', error);
-                document.getElementById('games-container').innerHTML = '<div class="empty-state" style="color: #ef4444;">Nie udało się pobrać danych z serwera.</div>';
+                document.getElementById('games-container').innerHTML = '<div class="empty-state" style="color: #ef4444;">Nie udało się pobrać danych z serwera. Przeładuj stronę lub zaloguj się ponownie.</div>';
             });
 
         // Generowanie kosztorysu
@@ -355,7 +364,10 @@
             if (!confirm(`Usunąć "${title}"?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/delete', {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({ title, platform, user_id: parseInt(userId) })
             });
             window.location.reload();
@@ -366,7 +378,10 @@
             if (!confirm(`Przenieść "${title}" do kolekcji?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
                 body: JSON.stringify({ title, platform, user_id: parseInt(userId) })
             });
             window.location.reload();
