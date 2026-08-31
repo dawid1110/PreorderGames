@@ -79,193 +79,198 @@
                     <span>Otwórz kolekcję</span>
                     <svg class="arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </div>
-
-                <!-- === MODUŁ KALENDARZA PREMIER === -->
-                
             </a>
-        <div class="calendar-container">
-                    <div class="cal-header">
-                        <button class="cal-btn" onclick="changeMonth(-1)">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                        </button>
-                        <h3 id="cal-month-year" class="cal-month-title">Ładowanie...</h3>
-                        <button class="cal-btn" onclick="changeMonth(1)">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </button>
-                    </div>
-                    
-                    <div class="cal-weekdays">
-                        <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div>Sb</div><div>Nd</div>
-                    </div>
-                    
-                    <div id="cal-days-grid" class="cal-days-grid">
-                        <!-- JS wygeneruje tutaj dni -->
-                    </div>
 
-                    <!-- Ukryta lista gier, która pokazuje się po kliknięciu w dzień -->
-                    <div id="cal-details" class="cal-details">
-                        <div id="cal-details-date" class="cal-details-date">Premiery</div>
-                        <div id="cal-games-list"></div>
-                    </div>
+            <!-- === MODUŁ KALENDARZA PREMIER === -->
+            <div class="calendar-container">
+                <div class="cal-header">
+                    <button class="cal-btn" onclick="changeMonth(-1)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <h3 id="cal-month-year" class="cal-month-title">Ładowanie...</h3>
+                    <button class="cal-btn" onclick="changeMonth(1)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
                 </div>
+                
+                <div class="cal-weekdays">
+                    <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div>Sb</div><div>Nd</div>
+                </div>
+                
+                <div id="cal-days-grid" class="cal-days-grid">
+                    <!-- JS wygeneruje tutaj dni -->
+                </div>
+
+                <!-- Ukryta lista gier, która pokazuje się po kliknięciu w dzień -->
+                <div id="cal-details" class="cal-details">
+                    <div id="cal-details-date" class="cal-details-date">Premiery</div>
+                    <div id="cal-games-list"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const userId = localStorage.getItem('user_id');
-        if (!userId) {
+        const token = localStorage.getItem('access_token');
+        
+        if (!userId || !token) {
             window.location.href = 'login.html';
         }
 
         function logout() {
             localStorage.removeItem('user_id');
             localStorage.removeItem('username');
+            localStorage.removeItem('access_token');
             window.location.href = 'login.html';
         }
+
         if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker zarejestrowany', reg))
-                .catch(err => console.error('Błąd rejestracji Service Workera', err));
-        });
-        let currentCalDate = new Date();
-    let preordersByDate = {}; // Słownik przechowujący gry podpięte pod konkretne daty YYYY-MM-DD
-    let activeDayElement = null;
-
-    // Pobranie userId (jeśli jeszcze nie masz tego w index.html)
-    const userId = localStorage.getItem('user_id');
-    if (!userId) {
-        window.location.href = 'login.html';
-    }
-
-    // Funkcja parsująca daty z bazy do formatu klucza (YYYY-MM-DD)
-    function formatDateToKey(dateStr) {
-        if (!dateStr) return null;
-        let parts, year, month, day;
-        if (dateStr.includes('.')) {
-            parts = dateStr.split('.');
-            day = parseInt(parts[0], 10); month = parseInt(parts[1], 10); year = parseInt(parts[2], 10);
-        } else if (dateStr.includes('-')) {
-            parts = dateStr.split('-');
-            year = parseInt(parts[0], 10); month = parseInt(parts[1], 10);
-            day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
-        } else { return null; }
-        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    }
-
-    // Pobieranie danych z backendu specjalnie pod kalendarz
-    async function initCalendar() {
-        try {
-            const res = await fetch(`https://preorder-api-pdjz.onrender.com/get_preorders?user_id=${userId}`);
-            const data = await res.json();
-            
-            // Grupowanie gier po dacie premiery
-            data.forEach(game => {
-                let key = formatDateToKey(game.release_date);
-                if(key) {
-                    if(!preordersByDate[key]) preordersByDate[key] = [];
-                    preordersByDate[key].push(game);
-                }
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker zarejestrowany', reg))
+                    .catch(err => console.error('Błąd rejestracji Service Workera', err));
             });
-            renderCalendar();
-        } catch (e) {
-            console.error("Błąd pobierania danych do kalendarza", e);
         }
-    }
 
-    // Główne renderowanie struktury miesiąca
-    function renderCalendar() {
-        const year = currentCalDate.getFullYear();
-        const month = currentCalDate.getMonth();
-        
-        const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
-        document.getElementById('cal-month-year').innerText = `${monthNames[month]} ${year}`;
-        
-        const daysContainer = document.getElementById('cal-days-grid');
-        daysContainer.innerHTML = '';
-        
-        // Polskie tygodnie zaczynają się od poniedziałku
-        const firstDayOfMonth = new Date(year, month, 1).getDay(); 
-        const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        // Generowanie pustych pól na początku miesiąca
-        for(let i = 0; i < startDay; i++) {
-            let emptyDiv = document.createElement('div');
-            emptyDiv.className = 'cal-day empty';
-            daysContainer.appendChild(emptyDiv);
+        let currentCalDate = new Date();
+        let preordersByDate = {}; // Słownik przechowujący gry podpięte pod konkretne daty YYYY-MM-DD
+        let activeDayElement = null;
+
+        // Funkcja parsująca daty z bazy do formatu klucza (YYYY-MM-DD)
+        function formatDateToKey(dateStr) {
+            if (!dateStr) return null;
+            let parts, year, month, day;
+            if (dateStr.includes('.')) {
+                parts = dateStr.split('.');
+                day = parseInt(parts[0], 10); month = parseInt(parts[1], 10); year = parseInt(parts[2], 10);
+            } else if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                year = parseInt(parts[0], 10); month = parseInt(parts[1], 10);
+                day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+            } else { return null; }
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         }
-        
-        // Generowanie dni z odpowiednimi klasami
-        for(let i = 1; i <= daysInMonth; i++) {
-            let dayDiv = document.createElement('div');
-            dayDiv.className = 'cal-day';
-            dayDiv.innerText = i;
+
+        // Pobieranie danych z backendu specjalnie pod kalendarz z autoryzacją
+        async function initCalendar() {
+            try {
+                const res = await fetch(`https://preorder-api-pdjz.onrender.com/get_preorders`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!res.ok) throw new Error("Brak autoryzacji lub błąd serwera");
+                
+                const data = await res.json();
+                
+                // Grupowanie gier po dacie premiery
+                data.forEach(game => {
+                    let key = formatDateToKey(game.release_date);
+                    if(key) {
+                        if(!preordersByDate[key]) preordersByDate[key] = [];
+                        preordersByDate[key].push(game);
+                    }
+                });
+                renderCalendar();
+            } catch (e) {
+                console.error("Błąd pobierania danych do kalendarza", e);
+                document.getElementById('cal-month-year').innerText = "Błąd połączenia";
+            }
+        }
+
+        // Główne renderowanie struktury miesiąca
+        function renderCalendar() {
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth();
             
-            let key = `${year}-${String(month+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
+            document.getElementById('cal-month-year').innerText = `${monthNames[month]} ${year}`;
             
-            // Jeśli w ten dzień wypada jakaś premiera, podświetl go!
-            if(preordersByDate[key] && preordersByDate[key].length > 0) {
-                dayDiv.classList.add('has-game');
-                dayDiv.onclick = () => showDayDetails(key, dayDiv);
-            } else {
-                dayDiv.onclick = () => showDayDetails(null, dayDiv); // Ukryj detale, jeśli kliknie w pusty dzień
+            const daysContainer = document.getElementById('cal-days-grid');
+            daysContainer.innerHTML = '';
+            
+            // Polskie tygodnie zaczynają się od poniedziałku
+            const firstDayOfMonth = new Date(year, month, 1).getDay(); 
+            const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; 
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Generowanie pustych pól na początku miesiąca
+            for(let i = 0; i < startDay; i++) {
+                let emptyDiv = document.createElement('div');
+                emptyDiv.className = 'cal-day empty';
+                daysContainer.appendChild(emptyDiv);
             }
             
-            daysContainer.appendChild(dayDiv);
+            // Generowanie dni z odpowiednimi klasami
+            for(let i = 1; i <= daysInMonth; i++) {
+                let dayDiv = document.createElement('div');
+                dayDiv.className = 'cal-day';
+                dayDiv.innerText = i;
+                
+                let key = `${year}-${String(month+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                // Jeśli w ten dzień wypada jakaś premiera, podświetl go
+                if(preordersByDate[key] && preordersByDate[key].length > 0) {
+                    dayDiv.classList.add('has-game');
+                    dayDiv.onclick = () => showDayDetails(key, dayDiv);
+                } else {
+                    dayDiv.onclick = () => showDayDetails(null, dayDiv); // Ukryj detale, jeśli kliknie w pusty dzień
+                }
+                
+                daysContainer.appendChild(dayDiv);
+            }
+            
+            // Resetowanie detali przy zmianie miesiąca
+            document.getElementById('cal-details').style.display = 'none';
+            activeDayElement = null;
         }
-        
-        // Resetowanie detali przy zmianie miesiąca
-        document.getElementById('cal-details').style.display = 'none';
-        activeDayElement = null;
-    }
 
-    // Przerzucanie miesięcy przód/tył
-    function changeMonth(step) {
-        currentCalDate.setMonth(currentCalDate.getMonth() + step);
-        renderCalendar();
-    }
-
-    // Pokazywanie listy gier pod kalendarzem po kliknięciu w dzień
-    function showDayDetails(key, element) {
-        if(activeDayElement) activeDayElement.classList.remove('active');
-        element.classList.add('active');
-        activeDayElement = element;
-        
-        const detailsContainer = document.getElementById('cal-details');
-        const listContainer = document.getElementById('cal-games-list');
-        const dateTitle = document.getElementById('cal-details-date');
-        
-        // Jeśli dzień jest pusty, schowaj menu
-        if(!key || !preordersByDate[key]) {
-            detailsContainer.style.display = 'none';
-            return;
+        // Przerzucanie miesięcy przód/tył
+        function changeMonth(step) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + step);
+            renderCalendar();
         }
-        
-        // Formatowanie ładnej daty do nagłówka
-        let parts = key.split('-');
-        dateTitle.innerText = `Premiery: ${parts[2]}.${parts[1]}.${parts[0]}`;
-        
-        // Budowanie listy gier z badge'ami platform
-        listContainer.innerHTML = '';
-        preordersByDate[key].forEach(game => {
-            listContainer.innerHTML += `
-                <div class="cal-game-item">
-                    <span class="platform-badge platform-${game.platform.toLowerCase()}" style="font-size: 0.7rem; padding: 4px 8px;">${game.platform}</span>
-                    <span style="color: #fff; font-size: 0.95rem; font-weight: 500;">${game.title}</span>
-                </div>
-            `;
+
+        // Pokazywanie listy gier pod kalendarzem po kliknięciu w dzień
+        function showDayDetails(key, element) {
+            if(activeDayElement) activeDayElement.classList.remove('active');
+            element.classList.add('active');
+            activeDayElement = element;
+            
+            const detailsContainer = document.getElementById('cal-details');
+            const listContainer = document.getElementById('cal-games-list');
+            const dateTitle = document.getElementById('cal-details-date');
+            
+            // Jeśli dzień jest pusty, schowaj menu
+            if(!key || !preordersByDate[key]) {
+                detailsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Formatowanie ładnej daty do nagłówka
+            let parts = key.split('-');
+            dateTitle.innerText = `Premiery: ${parts[2]}.${parts[1]}.${parts[0]}`;
+            
+            // Budowanie listy gier z badge'ami platform
+            listContainer.innerHTML = '';
+            preordersByDate[key].forEach(game => {
+                listContainer.innerHTML += `
+                    <div class="cal-game-item">
+                        <span class="platform-badge platform-${game.platform.toLowerCase()}" style="font-size: 0.7rem; padding: 4px 8px;">${game.platform}</span>
+                        <span style="color: #fff; font-size: 0.95rem; font-weight: 500;">${game.title}</span>
+                    </div>
+                `;
+            });
+            
+            detailsContainer.style.display = 'block';
+        }
+
+        // Odpal po załadowaniu strony
+        document.addEventListener('DOMContentLoaded', () => {
+            initCalendar();
         });
-        
-        detailsContainer.style.display = 'block';
-    }
-
-    // Odpal po załadowaniu strony
-    document.addEventListener('DOMContentLoaded', () => {
-        initCalendar();
-    });
-    }
     </script>
-    
 </body>
 </html>
