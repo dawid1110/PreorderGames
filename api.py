@@ -11,8 +11,8 @@ import jwt
 
 app = FastAPI()
 
-TELEGRAM_BOT_TOKEN = "8610360413:AAFpmUCUsQ39EB9lrfno_8T7-LxMWF2bhj4"
-TELEGRAM_CHAT_ID = "8457539262"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 # Konfiguracja CORS
 app.add_middleware(
