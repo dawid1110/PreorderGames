@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>Preorder Hub | Bento</title>
+    <style>
+        /* Styl Bento - niezależny od style.css aby nie psuć starego widoku */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #000; color: #fff; padding: 16px; padding-bottom: 40px; }
+        a { text-decoration: none; color: inherit; }
+        
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 8px 0; }
+        .nav-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+        .btn-classic { background: #27272a; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 800px; margin: 0 auto; }
+        
+        .bento-box { background: #18181b; border-radius: 28px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.08); }
+        
+        .bento-hero { grid-column: span 2; background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); position: relative; overflow: hidden; min-height: 180px; border: none; }
+        .bento-hero::after { content: ''; position: absolute; top: -50%; right: -20%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); border-radius: 50%; }
+        .bento-hero * { position: relative; z-index: 2; }
+        
+        .bento-list { grid-column: span 2; padding: 12px; background: transparent; border: none; }
+        
+        .label { font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+        .hero-label { color: rgba(255,255,255,0.8); }
+        .hero-title { font-size: 1.8rem; font-weight: 700; line-height: 1.1; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .stat-value { font-size: 1.8rem; font-weight: 700; letter-spacing: -1px; color: #fff; margin-bottom: 4px; }
+        
+        .platform { display: inline-block; padding: 4px 10px; background: rgba(0,0,0,0.3); border-radius: 12px; font-size: 0.75rem; font-weight: 600; backdrop-filter: blur(4px); margin-bottom: 12px; }
+        
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #18181b; border-radius: 24px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .item-info h4 { font-size: 1.05rem; margin-bottom: 4px; font-weight: 600; }
+        .item-meta { font-size: 0.85rem; color: #a1a1aa; display: flex; gap: 8px; align-items: center; }
+        .item-price { font-weight: 600; color: #a855f7; background: rgba(168,85,247,0.15); padding: 6px 12px; border-radius: 16px; font-size: 0.95rem; }
+
+        .loading { grid-column: span 2; text-align: center; padding: 40px; color: #a1a1aa; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="nav-title">Bento Hub</div>
+        <a href="index.html" class="btn-classic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Menu
+        </a>
+    </nav>
+
+    <div class="bento-grid" id="bento-container">
+        <div class="loading">Inicjalizacja modułów Bento...</div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = 'login.html';
+
+        function parseDate(dateStr) {
+            if (!dateStr) return Number.MAX_SAFE_INTEGER;
+            let parts, year, month, day = 1;
+            if (dateStr.includes('.')) {
+                parts = dateStr.split('.');
+                day = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; year = parseInt(parts[2], 10);
+            } else if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                year = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+            } else return Number.MAX_SAFE_INTEGER;
+            return new Date(year, month, day).getTime();
+        }
+
+        async function loadBento() {
+            try {
+                const res = await fetch('https://preorder-api-pdjz.onrender.com/get_preorders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                let games = await res.json();
+                games.sort((a, b) => parseDate(a.release_date) - parseDate(b.release_date));
+
+                let totalBudget = 0;
+                games.forEach(g => {
+                    if (g.in_budget !== false && g.offers.length > 0) {
+                        totalBudget += Math.min(...g.offers.map(o => o.price));
+                    }
+                });
+
+                const container = document.getElementById('bento-container');
+                if (games.length === 0) {
+                    container.innerHTML = `<div class="bento-box" style="grid-column: span 2; text-align: center;">Brak gier w bazie.</div>`;
+                    return;
+                }
+
+                const heroGame = games[0];
+                const heroPrice = heroGame.offers.length > 0 ? `${Math.min(...heroGame.offers.map(o => o.price)).toFixed(2)} zł` : 'Brak ofert';
+                
+                const remainingGames = games.slice(1);
+                const listHtml = remainingGames.map(g => {
+                    const price = g.offers.length > 0 ? `${Math.min(...g.offers.map(o => o.price)).toFixed(2)} zł` : '-';
+                    return `
+                        <div class="list-item">
+                            <div class="item-info">
+                                <h4>${g.title}</h4>
+                                <div class="item-meta">
+                                    <span style="color: #fff;">${g.platform}</span> • ${g.release_date}
+                                </div>
+                            </div>
+                            <div class="item-price">${price}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div class="bento-box bento-hero">
+                        <div>
+                            <div class="label hero-label">Najbliższa Premiera</div>
+                            <span class="platform">${heroGame.platform}</span>
+                            <h2 class="hero-title">${heroGame.title}</h2>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+                            <div style="font-size: 0.9rem; font-weight: 500;">${heroGame.release_date}</div>
+                            <div style="font-size: 1.2rem; font-weight: 700;">${heroPrice}</div>
+                        </div>
+                    </div>
+
+                    <div class="bento-box">
+                        <div class="label">Kosztorys</div>
+                        <div>
+                            <div class="stat-value">${totalBudget.toFixed(0)}</div>
+                            <div style="font-size: 0.85rem; color: #a1a1aa;">PLN Całkowicie</div>
+                        </div>
+                    </div>
+
+                    <div class="bento-box">
+                        <div class="label">Kolejka</div>
+                        <div>
+                            <div class="stat-value" style="color: #3b82f6;">${games.length}</div>
+                            <div style="font-size: 0.85rem; color: #a1a1aa;">Aktywne tytuły</div>
+                        </div>
+                    </div>
+
+                    <div class="bento-list">
+                        <div class="label" style="padding-left: 8px;">Późniejsze wydania</div>
+                        ${listHtml || '<div style="color: #a1a1aa; padding-left: 8px;">Brak kolejnych gier na horyzoncie.</div>'}
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('bento-container').innerHTML = `<div class="loading" style="color: #ef4444;">Błąd połączenia z serwerem.</div>`;
+            }
+        }
+
+        loadBento();
+    </script>
+</body>
+</html>
