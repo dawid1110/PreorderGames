@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <title>Preorder Hub | Immersja Konsolowa</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #000; color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.5s ease; }
+        a { text-decoration: none; color: inherit; }
+        
+        /* Tło dynamiczne */
+        #dynamic-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; transition: background 0.6s ease; opacity: 0.6; }
+        
+        .top-bar { display: flex; justify-content: space-between; padding: 24px; position: relative; z-index: 10; }
+        .time-display { font-size: 1.1rem; font-weight: 500; opacity: 0.8; }
+        .btn-exit { background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(10px); }
+
+        .hero-section { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 32px; position: relative; z-index: 10; }
+        .platform-badge { display: inline-block; padding: 6px 14px; background: rgba(255,255,255,0.15); border-radius: 6px; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; backdrop-filter: blur(5px); align-self: flex-start; text-transform: uppercase; }
+        .game-title { font-size: 2.8rem; font-weight: 800; line-height: 1.1; margin-bottom: 12px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .game-meta { font-size: 1.1rem; color: rgba(255,255,255,0.7); margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+        .game-price { font-size: 1.5rem; font-weight: 700; color: #fff; }
+        
+        .btn-play { background: #fff; color: #000; border: none; padding: 14px 32px; border-radius: 30px; font-size: 1.1rem; font-weight: 700; cursor: pointer; align-self: flex-start; transition: transform 0.2s; }
+        .btn-play:active { transform: scale(0.95); }
+
+        /* Karuzela na dole */
+        .carousel-container { padding: 0 0 32px 0; position: relative; z-index: 10; }
+        .carousel-title { padding: 0 32px; font-size: 1rem; font-weight: 600; margin-bottom: 16px; opacity: 0.8; }
+        .carousel { display: flex; gap: 16px; overflow-x: auto; padding: 0 32px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+        
+        .card { flex: 0 0 140px; height: 180px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid transparent; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; scroll-snap-align: start; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+        .card.active { border-color: #fff; transform: scale(1.05); background: rgba(255,255,255,0.15); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .card-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.5; }
+        .card-title { font-size: 0.9rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2rem; color: #a1a1aa; }
+    </style>
+</head>
+<body>
+
+    <div id="dynamic-bg"></div>
+
+    <div class="top-bar">
+        <a href="index.html" class="btn-exit">Wróc do Menu</a>
+        <div class="time-display" id="clock">00:00</div>
+    </div>
+
+    <div class="hero-section" id="hero-section">
+        <div class="loading">Łączenie z bazą...</div>
+    </div>
+
+    <div class="carousel-container">
+        <div class="carousel-title">Twoja Biblioteka</div>
+        <div class="carousel" id="carousel"></div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = 'login.html';
+
+        let allGames = [];
+
+        // Zegar jak w konsoli
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        function parseDate(dateStr) {
+            if (!dateStr) return Number.MAX_SAFE_INTEGER;
+            let parts, year, month, day = 1;
+            if (dateStr.includes('.')) {
+                parts = dateStr.split('.');
+                day = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; year = parseInt(parts[2], 10);
+            } else if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                year = parseInt(parts[0], 10); month = parseInt(parts[1], 10) - 1; day = parts.length > 2 ? parseInt(parts[2], 10) : 1;
+            } else return Number.MAX_SAFE_INTEGER;
+            return new Date(year, month, day).getTime();
+        }
+
+        // Generuje pseudo-kolor na podstawie tytułu, by tła się od siebie różniły
+        function getGameHue(title) {
+            let hash = 0;
+            for (let i = 0; i < title.length; i++) { hash = title.charCodeAt(i) + ((hash << 5) - hash); }
+            return Math.abs(hash % 360);
+        }
+
+        function focusGame(index) {
+            const game = allGames[index];
+            const hue = getGameHue(game.title);
+            
+            // Zmiana globalnego tła
+            document.getElementById('dynamic-bg').style.background = `radial-gradient(circle at 50% 30%, hsl(${hue}, 60%, 25%), #000 70%)`;
+            
+            const price = game.offers.length > 0 ? `${Math.min(...game.offers.map(o => o.price)).toFixed(2)} zł` : 'Brak ofert';
+            
+            document.getElementById('hero-section').innerHTML = `
+                <span class="platform-badge" style="color: hsl(${hue}, 80%, 70%); border: 1px solid hsl(${hue}, 50%, 30%);">${game.platform}</span>
+                <h1 class="game-title">${game.title}</h1>
+                <div class="game-meta">
+                    <span>Premiera: ${game.release_date}</span>
+                    <span>•</span>
+                    <span class="game-price">${price}</span>
+                </div>
+                <button class="btn-play">Zarządzaj Ofertami</button>
+            `;
+
+            // Aktualizacja aktywnej karty
+            document.querySelectorAll('.card').forEach((el, i) => {
+                if (i === index) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        async function loadConsoleUI() {
+            try {
+                const res = await fetch('https://preorder-api-pdjz.onrender.com/get_preorders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                allGames = await res.json();
+                allGames.sort((a, b) => parseDate(a.release_date) - parseDate(b.release_date));
+
+                if (allGames.length === 0) {
+                    document.getElementById('hero-section').innerHTML = `<h1 class="game-title">Brak Gier</h1>`;
+                    return;
+                }
+
+                const carousel = document.getElementById('carousel');
+                carousel.innerHTML = allGames.map((g, index) => {
+                    const hue = getGameHue(g.title);
+                    return `
+                        <div class="card" onclick="focusGame(${index})">
+                            <div class="card-bg" style="background: linear-gradient(to bottom, transparent, hsl(${hue}, 50%, 15%));"></div>
+                            <div class="card-title">${g.title}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                focusGame(0); // Ustaw focus na pierwszą grę
+            } catch (err) {
+                document.getElementById('hero-section').innerHTML = `<div class="loading" style="color: #ef4444;">Błąd połączenia</div>`;
+            }
+        }
+
+        loadConsoleUI();
+    </script>
+</body>
+</html>
