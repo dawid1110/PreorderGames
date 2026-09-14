@@ -19,7 +19,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://preordergames.dwiad1110.workers.dev", 
-        "http://localhost:5500"
+        "http://localhost:5500",
+        "https://preorderhub.pl"
     ],
     allow_credentials=True,
     allow_methods=["*"],
