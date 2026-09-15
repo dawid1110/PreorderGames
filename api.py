@@ -245,6 +245,59 @@ async def delete_game(data: dict, current_user: int = Depends(get_current_user))
     finally:
         await client.close()
 
+
+@app.put("/edit")
+async def edit_preorder(data: dict, current_user: int = Depends(get_current_user)):
+    orig_title = data.get("original_title")
+    orig_platform = data.get("original_platform")
+    
+    new_title = data.get("title")
+    new_platform = data.get("platform")
+    new_release_date = data.get("release_date")
+    new_offers = data.get("offers", [])
+    
+    if not orig_title or not orig_platform or not new_title:
+        raise HTTPException(status_code=400, detail="Brak wymaganych danych.")
+        
+    client = get_db_client()
+    try:
+        # 1. Znajdujemy ID gry w bazie
+        game_res = await client.execute(
+            "SELECT id FROM games WHERE title = ? AND platform = ? AND user_id = ?",
+            [orig_title, orig_platform, current_user]
+        )
+        if not game_res.rows:
+            raise HTTPException(status_code=404, detail="Gra nie znaleziona.")
+            
+        game_id = game_res.rows[0][0]
+        
+        # 2. Aktualizujemy główne dane gry
+        await client.execute(
+            "UPDATE games SET title = ?, platform = ?, release_date = ? WHERE id = ?",
+            [new_title, new_platform, new_release_date, game_id]
+        )
+        
+        # 3. Usuwamy stare oferty ze sklepów
+        await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
+        
+        # 4. Wrzucamy zaktualizowane oferty
+        for offer in new_offers:
+            store_name = offer.get("store_name")
+            price = offer.get("price")
+            order_number = offer.get("order_number")
+            url = offer.get("url")
+            
+            if store_name and price is not None:
+                await client.execute(
+                    "INSERT INTO store_offers (game_id, store_name, price, order_number, url) VALUES (?, ?, ?, ?, ?)",
+                    [game_id, store_name, price, order_number, url]
+                )
+                
+        return {"status": "success", "message": "Preorder zaktualizowany!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await client.close()
 # ==========================================
 # KOLEKCJA
 # ==========================================

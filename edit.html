@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#a855f7">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preorder Hub | Edycja</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.95rem; color: #e4e4e7; }
+        .form-input { width: 100%; padding: 12px 16px; background: rgba(9, 9, 11, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #fff; font-size: 1rem; outline: none; transition: all 0.2s; }
+        .form-input:focus { border-color: #a855f7; box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2); }
+        select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px; }
+        .offer-block { background: rgba(24, 24, 27, 0.5); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; position: relative; }
+        .btn-remove-offer { position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-add-offer { background: rgba(255, 255, 255, 0.05); border: 1px dashed rgba(255, 255, 255, 0.2); width: 100%; padding: 12px; border-radius: 12px; color: #a1a1aa; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 30px; }
+        .btn-submit { background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: white; border: none; width: 100%; padding: 16px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="container" style="max-width: 600px;">
+        <nav class="nav-back minimal-nav" style="margin-bottom: 30px;">
+            <a href="list.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Wróć do Listy
+            </a>
+        </nav>
+
+        <header class="app-header">
+            <h1 class="gradient-text">Edytuj Preorder</h1>
+            <p class="subtitle">Zaktualizuj dane o grze i dostosuj oferty ze sklepów.</p>
+        </header>
+
+        <div class="form-card" style="background: rgba(24, 24, 27, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 24px; backdrop-filter: blur(16px);">
+            <form id="edit-form">
+                <div class="form-group">
+                    <label class="form-label">Tytuł gry</label>
+                    <input type="text" id="title" class="form-input" required autocomplete="off">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">Platforma</label>
+                        <select id="platform" class="form-input" required>
+                            <option value="PS5">PlayStation 5</option>
+                            <option value="NS2">Nintendo Switch</option>
+                            <option value="PC">PC</option>
+                            <option value="XBOX">Xbox Series</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data premiery</label>
+                        <input type="date" id="release_date" class="form-input" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <h3 style="font-size: 1.1rem; color: #fff;">Oferty i sklepy</h3>
+                </div>
+
+                <div id="offers-container">
+                    <!-- Tu ładują się zapisane oferty -->
+                </div>
+
+                <button type="button" class="btn-add-offer" onclick="addOfferField()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Dodaj kolejną ofertę
+                </button>
+
+                <button type="submit" class="btn-submit" id="submit-btn">Zapisz zmiany</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = 'login.html';
+
+        let originalTitle = "";
+        let originalPlatform = "";
+
+        // Parsowanie URL i pobieranie aktualnych danych
+        async function loadGameData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            originalTitle = urlParams.get('title');
+            originalPlatform = urlParams.get('platform');
+
+            if (!originalTitle || !originalPlatform) {
+                alert("Brak wskazanej gry do edycji.");
+                window.location.href = 'list.html';
+                return;
+            }
+
+            try {
+                const res = await fetch('https://preorder-api-pdjz.onrender.com/get_preorders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!res.ok) throw new Error("Błąd pobierania bazy gier");
+                const games = await res.json();
+                
+                // Szukamy konkretnej gry
+                const game = games.find(g => g.title === originalTitle && g.platform === originalPlatform);
+                
+                if (!game) {
+                    alert("Nie znaleziono takiej gry w Twojej bibliotece.");
+                    window.location.href = 'list.html';
+                    return;
+                }
+
+                // Uzupełnianie głównych pól
+                document.getElementById('title').value = game.title;
+                document.getElementById('platform').value = game.platform;
+                
+                // Konwersja daty do formatu YYYY-MM-DD
+                if (game.release_date.includes('.')) {
+                    const parts = game.release_date.split('.');
+                    document.getElementById('release_date').value = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                } else if (game.release_date.includes('-')) {
+                    document.getElementById('release_date').value = game.release_date;
+                }
+
+                // Generowanie bloków z ofertami
+                if (game.offers && game.offers.length > 0) {
+                    game.offers.forEach(offer => {
+                        addOfferField(offer.store_name, offer.price, offer.orderNumber, offer.url);
+                    });
+                } else {
+                    addOfferField(); // Puste pole, jeśli z jakiegoś powodu gra nie miała ofert
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Błąd podczas łączenia z serwerem.");
+            }
+        }
+
+        function addOfferField(store = '', price = '', orderNumber = '', url = '') {
+            const container = document.getElementById('offers-container');
+            const div = document.createElement('div');
+            div.className = 'offer-block';
+            div.innerHTML = `
+                <button type="button" class="btn-remove-offer" onclick="this.parentElement.remove()" title="Usuń tę ofertę">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <div class="form-group" style="margin-bottom: 12px; padding-right: 40px;">
+                    <label class="form-label">Sklep</label>
+                    <input type="text" class="form-input offer-store" placeholder="np. RTV Euro AGD" value="${store}" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Cena (zł)</label>
+                        <input type="number" step="0.01" class="form-input offer-price" placeholder="0.00" value="${price}" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Numer zamówienia</label>
+                        <input type="text" class="form-input offer-order" placeholder="Opcjonalnie" value="${orderNumber}">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Link do oferty (opcjonalnie)</label>
+                    <input type="url" class="form-input offer-url" placeholder="https://..." value="${url}">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = 'Zapisywanie...';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+
+            const offersBlocks = document.querySelectorAll('.offer-block');
+            const offers = [];
+            
+            offersBlocks.forEach(block => {
+                const store = block.querySelector('.offer-store').value.trim();
+                const price = parseFloat(block.querySelector('.offer-price').value);
+                const orderNum = block.querySelector('.offer-order').value.trim();
+                const url = block.querySelector('.offer-url').value.trim();
+                
+                if (store && !isNaN(price)) {
+                    offers.push({
+                        store_name: store,
+                        price: price,
+                        order_number: orderNum || null,
+                        url: url || null
+                    });
+                }
+            });
+
+            // Konwersja daty na docelowy format (opcjonalnie, zależy jak API przetwarza daty, u Ciebie to zazwyczaj string YYYY-MM-DD lub DD.MM.YYYY)
+            // Zostawiamy natywny wynik z input type="date" czyli YYYY-MM-DD
+            const releaseDateRaw = document.getElementById('release_date').value;
+
+            const payload = {
+                original_title: originalTitle,
+                original_platform: originalPlatform,
+                title: document.getElementById('title').value.trim(),
+                platform: document.getElementById('platform').value,
+                release_date: releaseDateRaw,
+                offers: offers
+            };
+
+            try {
+                const res = await fetch('https://preorder-api-pdjz.onrender.com/edit', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    window.location.href = 'list.html';
+                } else {
+                    const data = await res.json();
+                    alert("Błąd: " + (data.detail || "Nieznany błąd"));
+                    btn.innerText = 'Zapisz zmiany';
+                    btn.style.opacity = '1';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Błąd sieci. Spróbuj ponownie.");
+                btn.innerText = 'Zapisz zmiany';
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        });
+
+        // Inicjalizacja przy ładowaniu
+        window.addEventListener('load', loadGameData);
+    </script>
+</body>
+</html>
