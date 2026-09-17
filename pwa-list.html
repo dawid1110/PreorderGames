@@ -110,6 +110,7 @@
   .game-card-main:active { background: rgba(255,255,255,0.02); }
   
   .game-cover { width: 64px; height: 85px; background: #333; border-radius: 8px; flex-shrink: 0; background: linear-gradient(to bottom, #444, #222); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; }
+  img.game-cover { object-fit: cover; background: transparent; }
 
   .game-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
   .game-title { font-size: 15px; font-weight: 600; color: #fff; line-height: 1.2; }
@@ -282,7 +283,6 @@
         let gameCounter = 0;
 
         for (const [groupName, groupGames] of Object.entries(grouped)) {
-          // Obliczamy najpierw sumę dla konkretnego miesiąca
           let monthlyBudget = 0;
           groupGames.forEach(g => {
             const isIgnored = g.in_budget === false; 
@@ -292,7 +292,6 @@
             }
           });
 
-          // Aktualizujemy budżet całkowity i budujemy wiersz do rozwinięcia
           totalBudget += monthlyBudget;
           if (monthlyBudget > 0) {
             breakdownHtml += `
@@ -303,7 +302,6 @@
             `;
           }
 
-          // Tworzymy nagłówek miesiąca (z sumą, jeśli > 0)
           let monthTotalDisplay = monthlyBudget > 0 ? `${monthlyBudget.toFixed(2)} zł` : '';
           htmlList += `
             <div class="sticky-header">
@@ -346,10 +344,15 @@
               }).join('');
             }
 
+            // Sprawdzamy okładkę z IGDB
+            let coverHtml = g.cover_url 
+                ? `<img src="${g.cover_url}" class="game-cover" alt="Okładka ${g.title}">` 
+                : `<div class="game-cover">NO IMG</div>`;
+
             htmlList += `
               <div class="game-card-wrapper ${isIgnored ? 'ignored' : ''}" id="${wrapperId}">
                   <div class="game-card-main" onclick="toggleDetails('${wrapperId}', event)">
-                    <div class="game-cover">NO IMG</div>
+                    ${coverHtml}
                     <div class="game-info">
                       <div class="game-title">${g.title}</div>
                       <div class="game-date">${formatCardDate(g.dateObj)}</div>

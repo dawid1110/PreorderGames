@@ -13,6 +13,8 @@ app = FastAPI()
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+TWITCH_CLIENT_ID = os.getenv("TWITCH_CLIENT_ID")
+TWITCH_CLIENT_SECRET = os.getenv("TWITCH_CLIENT_SECRET")
 
 # Konfiguracja CORS
 app.add_middleware(
@@ -30,7 +32,7 @@ app.add_middleware(
 # ==========================================
 # KONFIGURACJA OAUTH2 & JWT
 # ==========================================
-SECRET_KEY =  os.getenv("SECRET_KEY")
+SECRET_KEY = "zmien_mnie_na_bardzo_trudny_ciag_znakow_w_produkcji"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # Token ważny 7 dni
 
@@ -61,7 +63,6 @@ def hash_password(password: str) -> str:
     return f"{salt}${pwd_hash}"
 
 def verify_password(password: str, stored_hash: str) -> bool:
-    # Jeśli hasło w bazie nie ma $, traktujemy je jako zwykły tekst (leniwa migracja)
     if "$" not in stored_hash:
         return password == stored_hash
         
@@ -79,9 +80,47 @@ def get_db_client():
     )
 
 # ==========================================
+# INTEGRACJA IGDB (TWITCH) DLA OKŁADEK
+# ==========================================
+def get_twitch_token():
+    if not TWITCH_CLIENT_ID or not TWITCH_CLIENT_SECRET:
+        return None
+    url = f"https://id.twitch.tv/oauth2/token?client_id={TWITCH_CLIENT_ID}&client_secret={TWITCH_CLIENT_SECRET}&grant_type=client_credentials"
+    try:
+        response = requests.post(url)
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception as e:
+        print(f"Błąd pobierania tokenu Twitch: {e}")
+    return None
+
+def get_igdb_cover_url(game_title: str):
+    token = get_twitch_token()
+    if not token or not TWITCH_CLIENT_ID:
+        return None
+    
+    url = "https://api.igdb.com/v4/games"
+    headers = {
+        "Client-ID": TWITCH_CLIENT_ID,
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json"
+    }
+    
+    query = f'search "{game_title}"; fields cover.image_id; limit 1;'
+    try:
+        response = requests.post(url, headers=headers, data=query)
+        if response.status_code == 200:
+            data = response.json()
+            if data and "cover" in data[0]:
+                image_id = data[0]["cover"]["image_id"]
+                return f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg"
+    except Exception as e:
+        print(f"Błąd pobierania okładki z IGDB: {e}")
+    return None
+
+# ==========================================
 # AUTORYZACJA
 # ==========================================
-
 @app.post("/register")
 async def register(data: dict):
     username = data.get("username", "").strip()
@@ -120,7 +159,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         if not verify_password(password, password_hash):
             raise HTTPException(status_code=401, detail="Nieprawidłowa nazwa użytkownika lub hasło.")
             
-        # Zapisujemy nowe, bezpieczne hasło, jeśli było czystym tekstem
         if "$" not in password_hash:
             new_safe_hash = hash_password(password)
             await client.execute("UPDATE users SET password_hash = ? WHERE id = ?", [new_safe_hash, user_id])
@@ -133,24 +171,20 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 # ==========================================
 # PREORDERS & OFERTY
 # ==========================================
-
 @app.get("/get_preorders")
 async def get_preorders(current_user: int = Depends(get_current_user)):
-    # Pobieramy gry wyłącznie dla uwierzytelnionego w tokenie użytkownika (current_user)
     client = get_db_client()
-    
     try:
-        # UWAGA: Dodano in_budget do zapytania SQL
         games_res = await client.execute(
-            "SELECT id, title, platform, release_date, in_budget FROM games WHERE user_id = ?", 
+            "SELECT id, title, platform, release_date, in_budget, cover_url FROM games WHERE user_id = ?", 
             [current_user]
         )
         
         games_dict = {}
         for game_row in games_res.rows:
-            # Rozpakowujemy dodatkowe pole w_budzecie
             game_id, title, platform, release_date = game_row[0], game_row[1], game_row[2], game_row[3]
             in_budget = bool(game_row[4]) if len(game_row) > 4 and game_row[4] is not None else True
+            cover_url = game_row[5] if len(game_row) > 5 else None
             
             key = (title.strip().lower(), platform.strip().lower())
             
@@ -176,7 +210,8 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
                     "title": title,
                     "platform": platform,
                     "release_date": release_date,
-                    "in_budget": in_budget, # <--- Tutaj przekazujemy stan do frontendu
+                    "in_budget": in_budget,
+                    "cover_url": cover_url,
                     "offers": offers
                 }
                 
@@ -197,9 +232,12 @@ async def add_preorder(data: dict, current_user: int = Depends(get_current_user)
     client = get_db_client()
     
     try:
+        # Pobieranie okładki z IGDB
+        cover_url = get_igdb_cover_url(title)
+        
         game_res = await client.execute(
-            "INSERT INTO games (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
-            [current_user, title, platform, release_date]
+            "INSERT INTO games (user_id, title, platform, release_date, cover_url) VALUES (?, ?, ?, ?, ?)",
+            [current_user, title, platform, release_date, cover_url]
         )
         game_id = game_res.last_insert_rowid
         
@@ -245,7 +283,6 @@ async def delete_game(data: dict, current_user: int = Depends(get_current_user))
     finally:
         await client.close()
 
-
 @app.put("/edit")
 async def edit_preorder(data: dict, current_user: int = Depends(get_current_user)):
     orig_title = data.get("original_title")
@@ -261,7 +298,6 @@ async def edit_preorder(data: dict, current_user: int = Depends(get_current_user
         
     client = get_db_client()
     try:
-        # 1. Znajdujemy ID gry w bazie
         game_res = await client.execute(
             "SELECT id FROM games WHERE title = ? AND platform = ? AND user_id = ?",
             [orig_title, orig_platform, current_user]
@@ -271,16 +307,21 @@ async def edit_preorder(data: dict, current_user: int = Depends(get_current_user
             
         game_id = game_res.rows[0][0]
         
-        # 2. Aktualizujemy główne dane gry
-        await client.execute(
-            "UPDATE games SET title = ?, platform = ?, release_date = ? WHERE id = ?",
-            [new_title, new_platform, new_release_date, game_id]
-        )
+        # Jeśli zmieniono tytuł gry, pobieramy nową okładkę z IGDB
+        if new_title.strip().lower() != orig_title.strip().lower():
+            new_cover_url = get_igdb_cover_url(new_title)
+            await client.execute(
+                "UPDATE games SET title = ?, platform = ?, release_date = ?, cover_url = ? WHERE id = ?",
+                [new_title, new_platform, new_release_date, new_cover_url, game_id]
+            )
+        else:
+            await client.execute(
+                "UPDATE games SET title = ?, platform = ?, release_date = ? WHERE id = ?",
+                [new_title, new_platform, new_release_date, game_id]
+            )
         
-        # 3. Usuwamy stare oferty ze sklepów
         await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
         
-        # 4. Wrzucamy zaktualizowane oferty
         for offer in new_offers:
             store_name = offer.get("store_name")
             price = offer.get("price")
@@ -298,28 +339,31 @@ async def edit_preorder(data: dict, current_user: int = Depends(get_current_user
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         await client.close()
+
 # ==========================================
 # KOLEKCJA
 # ==========================================
-
 @app.get("/get_collection")
 async def get_collection(current_user: int = Depends(get_current_user)):
     client = get_db_client()
     try:
         res = await client.execute(
-            "SELECT id, title, platform, release_date, date_added FROM collections WHERE user_id = ? ORDER BY date_added DESC",
+            "SELECT id, title, platform, release_date, date_added, cover_url FROM collections WHERE user_id = ? ORDER BY date_added DESC",
             [current_user]
         )
         
         result = []
         for row in res.rows:
-            col_id, title, platform, release_date, date_added = row
+            col_id, title, platform, release_date, date_added = row[0:5]
+            cover_url = row[5] if len(row) > 5 else None
+            
             result.append({
                 "id": col_id,
                 "title": title,
                 "platform": platform,
                 "release_date": release_date,
-                "date_added": date_added
+                "date_added": date_added,
+                "cover_url": cover_url
             })
             
         return result
@@ -334,18 +378,19 @@ async def move_to_collection(data: dict, current_user: int = Depends(get_current
     client = get_db_client()
     try:
         game_res = await client.execute(
-            "SELECT id, release_date FROM games WHERE title = ? AND platform = ? AND user_id = ?",
+            "SELECT id, release_date, cover_url FROM games WHERE title = ? AND platform = ? AND user_id = ?",
             [title, platform, current_user]
         )
         
         if not game_res.rows:
             raise HTTPException(status_code=404, detail="Gra nie została znaleziona.")
             
-        game_id, release_date = game_res.rows[0]
+        game_id, release_date = game_res.rows[0][0], game_res.rows[0][1]
+        cover_url = game_res.rows[0][2] if len(game_res.rows[0]) > 2 else None
         
         await client.execute(
-            "INSERT INTO collections (user_id, title, platform, release_date) VALUES (?, ?, ?, ?)",
-            [current_user, title, platform, release_date]
+            "INSERT INTO collections (user_id, title, platform, release_date, cover_url) VALUES (?, ?, ?, ?, ?)",
+            [current_user, title, platform, release_date, cover_url]
         )
         await client.execute("DELETE FROM store_offers WHERE game_id = ?", [game_id])
         await client.execute("DELETE FROM games WHERE id = ?", [game_id])
@@ -388,11 +433,8 @@ def parse_game_date(date_str: str):
         return None
     return None
 
-# Ten endpoint zazwyczaj wywoływany jest z zewnątrz przez Cron, 
-# więc pozostaje bez Depends(get_current_user), ale wymaga jawnego podania user_id
 @app.get("/cron/weekly_summary")
 async def send_weekly_summary(user_id: int):
-    # Trzeba zasymulować zapytanie z bazy, ponieważ get_preorders wymaga teraz tokena
     client = get_db_client()
     try:
         games_res = await client.execute("SELECT title, platform, release_date FROM games WHERE user_id = ?", [user_id])
@@ -403,7 +445,7 @@ async def send_weekly_summary(user_id: int):
 
         this_week_games = []
         for row in games_res.rows:
-            title, platform, release_date = row
+            title, platform, release_date = row[0:3]
             g_date = parse_game_date(release_date)
             if g_date and monday <= g_date <= sunday:
                 this_week_games.append((g_date, {"title": title, "platform": platform}))
@@ -435,7 +477,6 @@ async def send_weekly_summary(user_id: int):
 
 @app.get("/ping")
 def keep_alive():
-    """Endpoint dla UptimeRobot / Crona zapobiegający usypianiu serwera na Render"""
     return {"status": "ok", "message": "Preorder API is running!"}
 
 @app.post("/update_budget")
