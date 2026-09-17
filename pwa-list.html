@@ -274,7 +274,7 @@
 
     async function toggleBudgetStatus(title, platform, isChecked) {
       try {
-        const res = await fetch('https://preorder-api-pdjz.onrender.com/toggle_budget', {
+        const res = await fetch('https://preorder-api-pdjz.onrender.com/update_budget', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ title, platform, in_budget: isChecked })
