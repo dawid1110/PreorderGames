@@ -32,13 +32,14 @@
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
 
   /* Dolny pasek */
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(31, 40, 51, 0.9); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; text-decoration: none; }
+ .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(31, 40, 51, 0.9); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 11px; text-decoration: none; width: 25%; }
   .nav-item.active { color: var(--accent); }
   .nav-icon { width: 24px; height: 24px; background: currentColor; mask-size: cover; -webkit-mask-size: cover; }
   .icon-home { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E"); }
   .icon-add { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/%3E%3C/svg%3E"); }
   .icon-collection { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 14h4v-4H4v4zm0 5h4v-4H4v4zM4 9h4V5H4v4zm5 5h12v-4H9v4zm0 5h12v-4H9v4zM9 5v4h12V5H9z'/%3E%3C/svg%3E"); }
+  .icon-calendar { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z'/%3E%3C/svg%3E"); }
 </style>
 </head>
 <body>
@@ -49,15 +50,18 @@
     <div class="empty-state">Wczytywanie biblioteki...</div>
   </div>
 
-  <nav class="bottom-nav">
+    <nav class="bottom-nav">
     <a href="pwa-list.html" class="nav-item">
       <div class="nav-icon icon-home"></div><span>Start</span>
     </a>
     <a href="pwa-add.html" class="nav-item">
       <div class="nav-icon icon-add"></div><span>Dodaj</span>
     </a>
-    <a href="pwa-collection.html" class="nav-item active">
+    <a href="pwa-collection.html" class="nav-item">
       <div class="nav-icon icon-collection"></div><span>Kolekcja</span>
+    </a>
+    <a href="pwa-index.html" class="nav-item active">
+      <div class="nav-icon icon-calendar"></div><span>Menu</span>
     </a>
   </nav>
 
