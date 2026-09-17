@@ -32,7 +32,7 @@ app.add_middleware(
 # ==========================================
 # KONFIGURACJA OAUTH2 & JWT
 # ==========================================
-SECRET_KEY = "zmien_mnie_na_bardzo_trudny_ciag_znakow_w_produkcji"
+SECRET_KEY =  os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # Token ważny 7 dni
 
