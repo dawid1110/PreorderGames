@@ -68,7 +68,16 @@
                     localStorage.setItem('access_token', data.access_token);
                     localStorage.setItem('user_id', data.user_id);
                     localStorage.setItem('username', data.username);
-                    window.location.href = 'index.html';
+                    // Sprawdzamy, czy aplikacja działa w trybie PWA (standalone) na telefonie lub tablecie
+                    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+                    if (isPWA) {
+                        // Jeśli użytkownik jest w zainstalowanej apce mobilnej -> kieruj na nowy widok
+                        window.location.href = 'pwa-list.html';
+                    } else {
+                        // Jeśli użytkownik siedzi na laptopie w przeglądarce -> kieruj na stronę główną / kafelkową
+                        window.location.href = 'index.html'; // lub Twój adres domowy dla przeglądarki
+                    }
                 } else {
                     errorBox.textContent = data.detail || 'Błąd logowania.';
                     errorBox.style.display = 'block';
