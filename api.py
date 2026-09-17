@@ -51,7 +51,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if user_id is None:
             raise HTTPException(status_code=401, detail="Nieprawidłowy token")
         return int(user_id)
-    except jwt.exceptions.PyJWTError:
+    except jwt.exceptions.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Nieprawidłowy lub wygasły token")
 
 # ==========================================
