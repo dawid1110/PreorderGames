@@ -4,4 +4,4 @@ PyJWT==2.13.0
 Requests==2.34.2
 uvicorn==0.24.0
 python-multipart
-jwt
+PyJWT==2.14.0
