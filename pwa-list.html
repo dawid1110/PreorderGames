@@ -151,6 +151,18 @@
     color: var(--accent);
     text-align: right;
   }
+
+  /* Kolumna po prawej stronie karty (cena + akcje) */
+  .game-actions-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  
+  .action-buttons { display: flex; gap: 6px; }
+  .icon-btn { background: rgba(255,255,255,0.05); border: none; color: var(--text-muted); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  
+  /* Kolory po kliknięciu na smartfonie */
+  .icon-btn:active { transform: scale(0.9); }
+  .icon-btn.edit-btn:active { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+  .icon-btn.move-btn:active { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+  .icon-btn.delete-btn:active { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
   
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
 
@@ -324,6 +336,7 @@
               priceText = `${lowest.toFixed(2)} zł`;
             }
 
+            // TUTAJ ZMIANA: wstrzykiwanie przycisków akcji pod ceną
             htmlList += `
               <div class="game-card">
                 <div class="game-cover">NO IMG</div>
@@ -334,7 +347,23 @@
                     <span class="platform-badge ${platClass}">${g.platform}</span>
                   </div>
                 </div>
-                <div class="game-price">${priceText}</div>
+                <div class="game-actions-col">
+                  <div class="game-price">${priceText}</div>
+                  <div class="action-buttons">
+                    <!-- Edycja -->
+                    <button class="icon-btn edit-btn" onclick="window.location.href='pwa-edit.html?title=' + encodeURIComponent('${g.title}') + '&platform=${g.platform}'" title="Edytuj">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <!-- Przenieś do kolekcji -->
+                    <button class="icon-btn move-btn" onclick="moveToCollection('${g.title}', '${g.platform}')" title="Przenieś do kolekcji">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    </button>
+                    <!-- Usuń -->
+                    <button class="icon-btn delete-btn" onclick="deleteGame('${g.title}', '${g.platform}')" title="Usuń preorder">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             `;
           });
@@ -346,6 +375,43 @@
       } catch (err) {
         document.getElementById('main-list-container').innerHTML = `<div class="empty-state" style="color: #ef4444;">Błąd połączenia z serwerem. Przeładuj stronę.</div>`;
         console.error(err);
+      }
+    }
+
+    // Nowe funkcje wspierające przyciski
+    async function deleteGame(title, platform) {
+      if(!confirm(`Na pewno usunąć preorder na grę ${title}?`)) return;
+      try {
+        const res = await fetch('https://preorder-api-pdjz.onrender.com/delete', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ title, platform })
+        });
+        if(res.ok) {
+            loadGames(); // odśwież widok po pomyślnym usunięciu
+        } else {
+            alert("Wystąpił błąd podczas usuwania z bazy.");
+        }
+      } catch(e) {
+        alert("Błąd połączenia z serwerem.");
+      }
+    }
+
+    async function moveToCollection(title, platform) {
+      if(!confirm(`Gra ${title} dotarła? Przenieść ją na fizyczną półkę w Kolekcji (to usunie obecne oferty cenowe)?`)) return;
+      try {
+        const res = await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ title, platform })
+        });
+        if(res.ok) {
+            loadGames(); // odśwież widok po udanym przeniesieniu
+        } else {
+            alert("Wystąpił błąd podczas przenoszenia do kolekcji.");
+        }
+      } catch(e) {
+        alert("Błąd połączenia z serwerem.");
       }
     }
 
