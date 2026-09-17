@@ -32,51 +32,6 @@
     background: linear-gradient(180deg, rgba(31,40,51,0.8) 0%, rgba(11,12,16,1) 100%);
   }
 
-  .carousel-section { margin-bottom: 24px; }
-  .carousel-title { padding: 0 20px; font-size: 14px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;}
-  
-  .carousel {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    gap: 16px;
-    padding: 0 20px;
-    scrollbar-width: none; 
-  }
-  .carousel::-webkit-scrollbar { display: none; } 
-
-  .carousel-card {
-    flex: 0 0 75%;
-    scroll-snap-align: center;
-    background: var(--card-bg);
-    border-radius: 16px;
-    height: 180px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: flex-end;
-    border: 1px solid #333;
-  }
-  
-  .carousel-card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    /* Domyślny gradient, modyfikowany z poziomu JS */
-    background: var(--card-gradient, linear-gradient(45deg, #2a0845 0%, #6441A5 100%));
-    z-index: 0;
-  }
-
-  .carousel-content {
-    position: relative;
-    z-index: 1;
-    padding: 16px;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    width: 100%;
-  }
-  .carousel-content h3 { color: #fff; font-size: 18px; margin-bottom: 4px; }
-  .carousel-content p { color: var(--accent); font-size: 12px; font-weight: bold; }
-
   .sticky-header {
     position: sticky;
     top: 0;
@@ -270,8 +225,6 @@
         let games = await res.json();
         
         const container = document.getElementById('main-list-container');
-        const heroSection = document.getElementById('hero-section');
-        const carousel = document.getElementById('carousel-container');
 
         if (games.length === 0) {
           container.innerHTML = `<div class="empty-state">Brak przypisanych preorderów. Dodaj nową grę, aby rozpocząć!</div>`;
@@ -282,27 +235,7 @@
         games = games.map(g => ({ ...g, dateObj: parseDateObj(g.release_date) }));
         games.sort((a, b) => a.dateObj - b.dateObj);
 
-        // 1. BUDOWA KARUZELI (TOP 3 najbliższe gry)
-        const topGames = games.slice(0, 3);
-        if (topGames.length > 0) {
-          const gradients = [
-            'linear-gradient(45deg, #2a0845 0%, #6441A5 100%)', // Fioletowy
-            'linear-gradient(45deg, #11998e 0%, #38ef7d 100%)', // Zielony
-            'linear-gradient(45deg, #cb2d3e 0%, #ef473a 100%)'  // Czerwony
-          ];
-          
-          carousel.innerHTML = topGames.map((g, i) => `
-            <div class="carousel-card" style="--card-gradient: ${gradients[i % gradients.length]};">
-              <div class="carousel-content">
-                <h3>${g.title}</h3>
-                <p>${formatCardDate(g.dateObj)}</p>
-              </div>
-            </div>
-          `).join('');
-          heroSection.style.display = 'block';
-        }
-
-        // 2. GRUPOWANIE POZOSTAŁYCH GIER WG MIESIĄCA/ROKU
+        // GRUPOWANIE GIER WG MIESIĄCA/ROKU
         const grouped = {};
         const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
         
@@ -312,7 +245,7 @@
           grouped[monthYear].push(g);
         });
 
-        // 3. RENDEROWANIE LIST
+        // RENDEROWANIE LIST
         let htmlList = '';
         for (const [groupName, groupGames] of Object.entries(grouped)) {
           htmlList += `<div class="sticky-header">${groupName}</div>`;
@@ -328,7 +261,7 @@
               priceText = `${lowest.toFixed(2)} zł`;
             }
 
-            // TUTAJ ZMIANA: wstrzykiwanie przycisków akcji pod ceną
+            // Karta z przyciskami
             htmlList += `
               <div class="game-card">
                 <div class="game-cover">NO IMG</div>
@@ -370,7 +303,7 @@
       }
     }
 
-    // Nowe funkcje wspierające przyciski
+    // Funkcje wspierające przyciski
     async function deleteGame(title, platform) {
       if(!confirm(`Na pewno usunąć preorder na grę ${title}?`)) return;
       try {
