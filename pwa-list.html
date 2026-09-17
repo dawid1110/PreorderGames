@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#a855f7">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Preorder Hub | Moja Lista</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Preorder Hub | PWA</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0b0c10">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Preorder Hub | Moja Lista</title>
 <style>
   /* Reset i zmienne */
   :root {
@@ -70,8 +67,12 @@
 
   .games-list { display: flex; flex-direction: column; gap: 12px; padding: 0 20px; margin-bottom: 24px; }
 
-  .game-card { display: flex; background: var(--card-bg); border-radius: 12px; padding: 12px; gap: 16px; align-items: center; transition: transform 0.2s; border: 1px solid transparent; }
-  .game-card.ignored { opacity: 0.6; border-color: rgba(255,255,255,0.05); }
+  /* Karta Główna i Rozwijanie */
+  .game-card-wrapper { background: var(--card-bg); border-radius: 12px; border: 1px solid transparent; overflow: hidden; transition: 0.2s; }
+  .game-card-wrapper.ignored { opacity: 0.6; border-color: rgba(255,255,255,0.05); }
+
+  .game-card-main { display: flex; padding: 12px; gap: 16px; align-items: center; cursor: pointer; }
+  .game-card-main:active { background: rgba(255,255,255,0.02); }
   
   .game-cover { width: 64px; height: 85px; background: #333; border-radius: 8px; flex-shrink: 0; background: linear-gradient(to bottom, #444, #222); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; }
 
@@ -92,8 +93,8 @@
   .game-price { font-size: 14px; font-weight: bold; color: var(--accent); text-align: right; }
   .ignored .game-price { color: var(--text-muted); text-decoration: line-through; }
 
-  /* Stylizacja Switcha (Przełącznika) */
-  .toggle-container { display: flex; align-items: center; gap: 6px; }
+  /* Stylizacja Switcha */
+  .toggle-container { display: flex; align-items: center; gap: 6px; cursor: default; }
   .toggle-label { font-size: 9px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
   .switch { position: relative; display: inline-block; width: 32px; height: 18px; }
   .switch input { opacity: 0; width: 0; height: 0; }
@@ -108,6 +109,17 @@
   .icon-btn.edit-btn:active { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
   .icon-btn.move-btn:active { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
   .icon-btn.delete-btn:active { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+  /* Rozwijane Szczegóły (Oferty) */
+  .game-details { display: none; padding: 0 12px 12px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: -4px; background: rgba(0,0,0,0.1); }
+  .game-card-wrapper.expanded .game-details { display: block; }
+  .offer-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .offer-row:last-child { border-bottom: none; }
+  .offer-store { font-size: 13px; font-weight: 500; color: #fff; }
+  .offer-order { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
+  .offer-right { display: flex; align-items: center; gap: 12px; }
+  .offer-price { font-size: 13px; font-weight: bold; color: var(--accent); }
+  .offer-link { color: var(--accent-dark); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
   
   .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
 
@@ -116,14 +128,13 @@
   .nav-item.active { color: var(--accent); }
   .nav-icon { width: 24px; height: 24px; background: currentColor; mask-size: cover; -webkit-mask-size: cover; }
   .icon-home { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E"); }
-  .icon-search { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E"); }
   .icon-add { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/%3E%3C/svg%3E"); }
   .icon-calendar { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z'/%3E%3C/svg%3E"); }
 </style>
 </head>
 <body>
 
-  <header>Premiery</header>
+  <header>Moja Lista</header>
 
   <div class="budget-card">
     <div class="budget-info">
@@ -180,6 +191,16 @@
       return `${dateObj.getDate()} ${months[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
     }
 
+    // Funkcja globalna obsługująca kliknięcie w kartę, pomijając obszary interaktywne
+    function toggleDetails(elementId, event) {
+        // Zabezpieczenie przed rozwijaniem gdy klikamy w przełącznik lub przyciski akcji
+        if (event.target.closest('.toggle-container') || event.target.closest('.action-buttons')) {
+            return;
+        }
+        const wrapper = document.getElementById(elementId);
+        wrapper.classList.toggle('expanded');
+    }
+
     async function loadGames() {
       try {
         const res = await fetch('https://preorder-api-pdjz.onrender.com/get_preorders', {
@@ -211,19 +232,43 @@
         });
 
         let htmlList = '';
+        let gameCounter = 0;
+
         for (const [groupName, groupGames] of Object.entries(grouped)) {
           htmlList += `<div class="sticky-header">${groupName}</div>`;
           htmlList += `<div class="games-list">`;
           
           groupGames.forEach(g => {
+            gameCounter++;
+            const wrapperId = `game-card-${gameCounter}`;
             const platClass = getPlatformClass(g.platform);
             const isIgnored = g.in_budget === false; 
             
             let priceText = '-';
             let lowestPrice = 0;
+            let offersHtml = '<div style="padding: 10px 0; color: #8b929a; font-size: 12px; text-align: center;">Brak dodanych ofert dla tej gry.</div>';
+
             if (g.offers && g.offers.length > 0) {
               lowestPrice = Math.min(...g.offers.map(o => o.price));
               priceText = `${lowestPrice.toFixed(2)} zł`;
+              
+              // Generowanie listy ofert pod spodem
+              offersHtml = g.offers.map(offer => {
+                  let linkHtml = offer.url ? `<a href="${offer.url}" target="_blank" class="offer-link" title="Przejdź do sklepu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : '';
+                  let orderNumHtml = offer.order_number ? `<span class="offer-order">ZAM: ${offer.order_number}</span>` : '';
+                  return `
+                    <div class="offer-row">
+                        <div>
+                            <div class="offer-store">${offer.store_name}</div>
+                            ${orderNumHtml}
+                        </div>
+                        <div class="offer-right">
+                            <div class="offer-price">${offer.price.toFixed(2)} zł</div>
+                            ${linkHtml}
+                        </div>
+                    </div>
+                  `;
+              }).join('');
             }
 
             // Dodaj do kosztorysu tylko jeśli nie jest ignorowane i ma cenę
@@ -232,38 +277,46 @@
             }
 
             htmlList += `
-              <div class="game-card ${isIgnored ? 'ignored' : ''}">
-                <div class="game-cover">NO IMG</div>
-                <div class="game-info">
-                  <div class="game-title">${g.title}</div>
-                  <div class="game-date">${formatCardDate(g.dateObj)}</div>
-                  <div class="platforms">
-                    <span class="platform-badge ${platClass}">${g.platform}</span>
-                  </div>
-                </div>
-                <div class="game-actions-col">
-                  <div class="game-price">${priceText}</div>
-                  
-                  <div class="toggle-container">
-                    <span class="toggle-label">W budżecie</span>
-                    <label class="switch">
-                      <input type="checkbox" onchange="toggleBudgetStatus('${g.title}', '${g.platform}', this.checked)" ${!isIgnored ? 'checked' : ''}>
-                      <span class="slider"></span>
-                    </label>
+              <div class="game-card-wrapper ${isIgnored ? 'ignored' : ''}" id="${wrapperId}">
+                  <div class="game-card-main" onclick="toggleDetails('${wrapperId}', event)">
+                    <div class="game-cover">NO IMG</div>
+                    <div class="game-info">
+                      <div class="game-title">${g.title}</div>
+                      <div class="game-date">${formatCardDate(g.dateObj)}</div>
+                      <div class="platforms">
+                        <span class="platform-badge ${platClass}">${g.platform}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="game-actions-col">
+                      <div class="game-price">${priceText}</div>
+                      
+                      <div class="toggle-container">
+                        <span class="toggle-label">W budżecie</span>
+                        <label class="switch">
+                          <input type="checkbox" onchange="toggleBudgetStatus('${g.title}', '${g.platform}', this.checked)" ${!isIgnored ? 'checked' : ''}>
+                          <span class="slider"></span>
+                        </label>
+                      </div>
+
+                      <div class="action-buttons">
+                        <button class="icon-btn edit-btn" onclick="window.location.href='pwa-edit.html?title=' + encodeURIComponent('${g.title}') + '&platform=${g.platform}'" title="Edytuj">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button class="icon-btn move-btn" onclick="moveToCollection('${g.title}', '${g.platform}')" title="Przenieś do kolekcji">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        </button>
+                        <button class="icon-btn delete-btn" onclick="deleteGame('${g.title}', '${g.platform}')" title="Usuń preorder">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div class="action-buttons">
-                    <button class="icon-btn edit-btn" onclick="window.location.href='pwa-edit.html?title=' + encodeURIComponent('${g.title}') + '&platform=${g.platform}'" title="Edytuj">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
-                    <button class="icon-btn move-btn" onclick="moveToCollection('${g.title}', '${g.platform}')" title="Przenieś do kolekcji">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    </button>
-                    <button class="icon-btn delete-btn" onclick="deleteGame('${g.title}', '${g.platform}')" title="Usuń preorder">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
+                  <div class="game-details">
+                    <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: bold; margin-top: 8px; margin-bottom: 4px;">Szczegóły Ofert</div>
+                    ${offersHtml}
                   </div>
-                </div>
               </div>
             `;
           });
