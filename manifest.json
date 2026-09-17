@@ -2,7 +2,7 @@
   "name": "Preorder Hub",
   "short_name": "Preorders",
   "description": "Twoje centrum zarządzania nadchodzącymi grami.",
-  "start_url": "./index.html",
+  "start_url": "./pwa-list.html",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#a855f7",
