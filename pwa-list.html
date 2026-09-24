@@ -152,7 +152,7 @@
   .offer-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
   .offer-row:last-child { border-bottom: none; }
   .offer-store { font-size: 13px; font-weight: 500; color: #fff; }
-  .offer-order { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
+  .offer-order { font-size: 13px; color: var(--text-muted); display: block; margin-top: 2px; }
   .offer-right { display: flex; align-items: center; gap: 12px; }
   .offer-price { font-size: 13px; font-weight: bold; color: var(--accent); }
   .offer-link { color: var(--accent-dark); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
@@ -328,7 +328,7 @@
               
               offersHtml = g.offers.map(offer => {
                   let linkHtml = offer.url ? `<a href="${offer.url}" target="_blank" class="offer-link" title="Przejdź do sklepu"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>` : '';
-                  let orderNumHtml = offer.order_number ? `<span class="offer-order">ZAM: ${offer.order_number}</span>` : '';
+                  let orderNumHtml = offer.order_number ? `<span class="offer-order">Numer zamówienia: ${offer.order_number}</span>` : '';
                   return `
                     <div class="offer-row">
                         <div>
