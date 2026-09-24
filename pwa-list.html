@@ -318,6 +318,10 @@
             const platClass = getPlatformClass(g.platform);
             const isIgnored = g.in_budget === false; 
             
+            // --- POPRAWKA: Zabezpieczenie przed apostrofami i cudzysłowami ---
+            const safeTitle = g.title.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            const safePlatform = g.platform.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            
             let priceText = '-';
             let lowestPrice = 0;
             let offersHtml = '<div style="padding: 10px 0; color: #8b929a; font-size: 12px; text-align: center;">Brak dodanych ofert dla tej gry.</div>';
@@ -367,19 +371,19 @@
                       <div class="toggle-container">
                         <span class="toggle-label">W budżecie</span>
                         <label class="switch">
-                          <input type="checkbox" onchange="toggleBudgetStatus('${g.title}', '${g.platform}', this.checked)" ${!isIgnored ? 'checked' : ''}>
+                          <input type="checkbox" onchange="toggleBudgetStatus('${safeTitle}', '${safePlatform}', this.checked)" ${!isIgnored ? 'checked' : ''}>
                           <span class="slider"></span>
                         </label>
                       </div>
 
                       <div class="action-buttons">
-                        <button class="icon-btn edit-btn" onclick="window.location.href='pwa-edit.html?title=' + encodeURIComponent('${g.title}') + '&platform=${g.platform}'" title="Edytuj">
+                        <button class="icon-btn edit-btn" onclick="window.location.href='pwa-edit.html?title=' + encodeURIComponent('${safeTitle}') + '&platform=${safePlatform}'" title="Edytuj">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         </button>
-                        <button class="icon-btn move-btn" onclick="moveToCollection('${g.title}', '${g.platform}')" title="Przenieś do kolekcji">
+                        <button class="icon-btn move-btn" onclick="moveToCollection('${safeTitle}', '${safePlatform}')" title="Przenieś do kolekcji">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                         </button>
-                        <button class="icon-btn delete-btn" onclick="deleteGame('${g.title}', '${g.platform}')" title="Usuń preorder">
+                        <button class="icon-btn delete-btn" onclick="deleteGame('${safeTitle}', '${safePlatform}')" title="Usuń preorder">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                       </div>
