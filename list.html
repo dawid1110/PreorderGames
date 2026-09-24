@@ -112,11 +112,9 @@
         }
 
         // Zmiana stanu checkboxa, natychmiastowe przeliczenie i wysłanie do bazy
-        async function toggleBudgetState(encodedTitle, platform, isChecked) {
-            const decodedTitle = decodeURIComponent(encodedTitle);
-            
+        async function toggleBudgetState(title, platform, isChecked) {
             // Najpierw aktualizujemy lokalną tablicę (brak lagów w interfejsie)
-            const game = allPreorders.find(g => g.title === decodedTitle && g.platform === platform);
+            const game = allPreorders.find(g => g.title === title && g.platform === platform);
             if (game) {
                 game.in_budget = isChecked;
             }
@@ -133,7 +131,7 @@
                     },
                     body: JSON.stringify({ 
                         user_id: parseInt(userId), 
-                        title: decodedTitle, 
+                        title: title, 
                         platform: platform, 
                         in_budget: isChecked 
                     })
@@ -143,7 +141,7 @@
             }
         }
 
-        // Pobieranie danych z bazy (już z flagami in_budget)
+        // Pobieranie danych z bazy
         fetch(`https://preorder-api-pdjz.onrender.com/get_preorders`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -269,7 +267,13 @@
                     `;
                 }).join('');
 
-                let encodedTitle = encodeURIComponent(game.title);
+                // ZABEZPIECZENIA PRZED APOSTROFAMI W NAZWACH GIER 
+                const safeTitle = game.title.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const safePlatform = game.platform.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                
+                // UrlSafe dla przycisku Edycji (aby zbudować poprawny link bez błędów w JS)
+                const urlSafeTitle = encodeURIComponent(game.title).replace(/'/g, "%27");
+                const urlSafePlatform = encodeURIComponent(game.platform).replace(/'/g, "%27");
 
                 return `
                     <div class="game-card" style="animation-delay: ${index * 0.1}s" onclick="toggleCard(this)">
@@ -283,16 +287,16 @@
                             </div>
                             
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection('${encodedTitle}', '${game.platform}')" title="Odbierz i przenieś do kolekcji">
+                                <button class="btn-collect-game" onclick="event.stopPropagation(); moveToCollection('${safeTitle}', '${safePlatform}')" title="Odbierz i przenieś do kolekcji">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
-                                <button class="btn-edit-game" onclick="event.stopPropagation(); window.location.href='edit.html?title=' + encodeURIComponent('${game.title}') + '&platform=${game.platform}'" title="Edytuj preorder" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; transition: all 0.2s;">
+                                <button class="btn-edit-game" onclick="event.stopPropagation(); window.location.href='edit.html?title=${urlSafeTitle}&platform=${urlSafePlatform}'" title="Edytuj preorder" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 6px; border-radius: 8px; display: flex; transition: all 0.2s;">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                     </svg>
                                 </button>
-                                <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame('${encodedTitle}', '${game.platform}')" title="Usuń preorder">
+                                <button class="btn-delete-game" onclick="event.stopPropagation(); deleteGame('${safeTitle}', '${safePlatform}')" title="Usuń preorder">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                 </button>
                                 <svg class="expand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -308,7 +312,7 @@
 
                         <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;" onclick="event.stopPropagation()">
                             <label class="budget-checkbox-wrapper">
-                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleBudgetState('${encodedTitle}', '${game.platform}', this.checked)">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleBudgetState('${safeTitle}', '${safePlatform}', this.checked)">
                                 Wliczaj do kosztorysu
                             </label>
                         </div>
@@ -365,8 +369,7 @@
             cardElement.classList.toggle('expanded');
         }
 
-        async function deleteGame(encodedTitle, platform) {
-            const title = decodeURIComponent(encodedTitle);
+        async function deleteGame(title, platform) {
             if (!confirm(`Usunąć "${title}"?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/delete', {
                 method: 'DELETE',
@@ -379,8 +382,7 @@
             window.location.reload();
         }
 
-        async function moveToCollection(encodedTitle, platform) {
-            const title = decodeURIComponent(encodedTitle);
+        async function moveToCollection(title, platform) {
             if (!confirm(`Przenieść "${title}" do kolekcji?`)) return;
             await fetch('https://preorder-api-pdjz.onrender.com/move_to_collection', {
                 method: 'POST',
