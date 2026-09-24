@@ -219,7 +219,7 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
                 offers.append({
                     "store_name": store_name,
                     "price": price,
-                    "orderNumber": order_number,
+                    "order_number": order_number,
                     "url": url
                 })
                 
