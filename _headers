@@ -1,0 +1,17 @@
+# Cloudflare static assets / Pages: verify response headers after publication.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/v3/
+  Cache-Control: no-cache
+/v3/index.html
+  Cache-Control: no-cache
+/v3/sw.js
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/recover.html
+  Cache-Control: no-cache
+/launch/recover.js
+  Cache-Control: no-cache

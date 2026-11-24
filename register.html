@@ -7,11 +7,11 @@
   <title>Preorder Hub</title>
   <link rel="icon" href="./v3/assets/icon-192.png">
   <script>
-    location.replace('./v3/index.html' + location.search + (location.hash || ""));
+    location.replace('./v3/index.html?register=1' + (location.search ? '&' + location.search.slice(1) : '') + (location.hash || ""));
   </script>
-  <noscript><meta http-equiv="refresh" content="0; url=./v3/index.html"></noscript>
+  <noscript><meta http-equiv="refresh" content="0; url=./v3/index.html?register=1"></noscript>
 </head>
 <body>
-  <p>Otwieranie Preorder Hub 3.1. <a href="./v3/index.html">Przejdź do aplikacji</a>.</p>
+  <p>Otwieranie Preorder Hub 3.2. <a href="./v3/index.html?register=1">Przejdź do aplikacji</a>.</p>
 </body>
 </html>

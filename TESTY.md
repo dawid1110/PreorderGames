@@ -1,9 +1,10 @@
-# Weryfikacja paczki 3.1
+# Weryfikacja 3.2.0 (20261124-4)
 
-- 19 testów regresji backendu z symulowanym Turso HTTP: PASS (`PYTHONPATH=. python -m pytest -q tests/test_preorder_https.py`; pytest jest zależnością testową, nie produkcyjną).
-- 17 grup testów Node dotyczących instalacji PWA, Android/iPad, aktualizacji i cache: PASS (`node tests/pwa_logic.test.cjs`).
-- 14 adresów starego GUI, po 3 warianty query/hash: 42 kontrole PASS (`node tests/redirects.test.cjs`).
-- Składnia app.js, pwa.js i sw.js, identyfikatory HTML, zasoby, manifesty i rzeczywiste wymiary PNG: PASS.
-- api_v2.py identyczny z najnowszym przekazanym repozytorium (porównanie bajtowe).
+Wykonano w lokalnym środowisku:
+- `python -m pytest tests/test_preorder_https.py -q`: 27/27. Testy adaptera HTTPS z symulowanym serwerem Turso i SQLite, również autoryzacja, izolacja kont, rejestracja z wersją regulaminu, eksport, zgłoszenia, aktywność, transakcja usuwania, nieprzydzielanie ponowne ID, rollback i brak migracji przy istniejących odczytach.
+- `node tests/pwa_logic.test.cjs`: 25/25 grup. Symulowany runtime workera i przeglądarki; instalator, czekanie, jednorazowa migracja, aktywacja, odłożenie, odmowa, timeout, inne karty, cache i awaria sieci.
+- `node tests/recovery.test.cjs`: 2 przypadki (selektywne usuwanie i błąd).
+- `node tests/redirects.test.cjs`: 45 sprawdzeń adresów (39 starych i 6 landing page).
+- `python tests/test_browser_inline.py`: rzeczywisty Chromium, HTML/CSS/JS osadzone lokalnie, symulowana pamięć i API. Testy wizualne 1440 px oraz 412 px, izolacja demo, rejestracja, login, konto, eksport, feedback, admin, usunięcie, zamknięta rejestracja. Zrzuty ekranu wygenerowane z danych demo.
 
-Próba otwarcia lokalnego serwera w Chromium zakończyła się blokadą środowiska ERR_BLOCKED_BY_ADMINISTRATOR. Nie wykonano zatem aktualnego testu renderowania ani rzeczywistej instalacji na urządzeniu. Nie wykonywano połączeń z produkcyjnym Turso ani publikacji na hostingu. Testy Node/Python są symulacjami, nie potwierdzeniem działania na produkcji.
+Ograniczenia: środowisko blokuje top-level URL navigation (`ERR_BLOCKED_BY_ADMINISTRATOR`), więc nie było możliwe zweryfikowanie rzeczywistej rejestracji/aktywacji service workera ani end-to-end po URL. Test `tests/test_browser_launch.py` pozostawiono jako dodatkowy test odbioru na własnym komputerze (Playwright + Chromium + lokalny serwer). Zmień ścieżkę do Chromium, jeśli potrzeba. Brak połączenia z produkcyjnym Turso/Render/Cloudflare. Weryfikacja realnej aktualizacji z 3.1 i instalacji na fizycznym Androidzie jest konieczna po deployu. To nie pełny audyt bezpieczeństwa ani prawny.

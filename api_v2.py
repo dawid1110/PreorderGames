@@ -23,6 +23,7 @@ from urllib.parse import urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
 import httpx
+import public_launch as launch
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -81,6 +82,7 @@ def validate_config() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     validate_config()
+    launch.init_state(app)
     if ALLOW_LEGACY_PLAINTEXT:
         logger.warning("Legacy plaintext password verification is enabled; disable after migration")
     app.state.twitch_token = None
@@ -167,6 +169,8 @@ class InputModel(BaseModel):
 class RegisterInput(InputModel):
     username: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
     password: Annotated[str, StringConstraints(min_length=8, max_length=1024)]
+    accept_terms: StrictBool = False
+    policy_version: str | None = Field(default=None, max_length=40)
 
 
 class OfferInput(InputModel):
@@ -562,6 +566,8 @@ def verify_and_upgrade(password: str, stored: str, dummy_hash: str) -> tuple[boo
 
 @app.post("/register")
 async def register(data: RegisterInput, request: Request):
+    launch.check_registration(data)
+    launch.rate_auth(request, "register")
     async with request.app.state.password_slots:
         hashed = await run_in_threadpool(password_hasher.hash, data.password)
     async with transaction() as db:
@@ -569,7 +575,7 @@ async def register(data: RegisterInput, request: Request):
         if result.rows:
             raise HTTPException(409, "Użytkownik o takiej nazwie już istnieje.")
         try:
-            await db.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", [data.username, hashed])
+            await launch.register_user(db, data.username, hashed, data.policy_version)
         except Exception as exc:
             if getattr(exc, "code", None) == "SQLITE_CONSTRAINT_UNIQUE":
                 raise HTTPException(409, "Użytkownik o takiej nazwie już istnieje.") from None
@@ -579,6 +585,7 @@ async def register(data: RegisterInput, request: Request):
 
 @app.post("/login")
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    launch.rate_auth(request, "login")
     username = form_data.username.strip()
     password = form_data.password  # Never trim passwords for new accounts.
     if not username or len(username) > 100 or not password or len(password) > 1024:
@@ -596,6 +603,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
             update = await db.execute("UPDATE users SET password_hash = ? WHERE id = ? AND password_hash = ?", [upgraded, user_id, stored])
             if update.rows_affected != 1:
                 raise unauthorized("Dane konta zostały zmienione. Zaloguj się ponownie.")
+    await launch.record_activity(database, user_id)
     return {"access_token": create_access_token(user_id), "token_type": "bearer", "user_id": user_id, "username": username}
 
 
@@ -679,6 +687,7 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
                               "cover_url": cover, "offers": []}
         if offer_game_id is not None:
             games[game_id]["offers"].append({"store_name": store, "price": price, "order_number": order_no, "url": url})
+    await launch.record_activity(database, current_user)
     return list(games.values())
 
 
@@ -686,6 +695,8 @@ async def get_preorders(current_user: int = Depends(get_current_user)):
 async def add_preorder(data: AddPreorderInput, request: Request, current_user: int = Depends(get_current_user)):
     cover = await get_igdb_cover_url(data.title, request.app.state)
     async with transaction() as db:
+        if not (await db.execute("SELECT id FROM users WHERE id = ?", [current_user])).rows:
+            raise unauthorized("Konto nie istnieje")
         await ensure_unique_game(db, current_user, data.title, data.platform)
         result = await db.execute("""
             INSERT INTO games (user_id, title, platform, release_date, cover_url, in_budget)
@@ -872,3 +883,15 @@ async def send_weekly_summary(request: Request, user_id: int | None = None):
 @app.get("/ping")
 def keep_alive():
     return {"status": "ok", "message": "Preorder API is running!"}
+
+
+# Optional public-launch account and feedback routes. Existing API stays on api_v2:app.
+def configured_telegram_user():
+    try:
+        return int(TELEGRAM_USER_ID or 0) or None
+    except ValueError:
+        return None
+
+launch.add_routes(app, database=database, transaction=transaction,
+                  current_user=get_current_user, verify_password=verify_and_upgrade,
+                  telegram_user_id=configured_telegram_user)

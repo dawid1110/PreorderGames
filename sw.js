@@ -1,4 +1,4 @@
 'use strict';
-// Legacy root PWA compatibility. No caching, no interception of requests.
-// The new application registers /v3/sw.js with scope /v3/.
-self.addEventListener('install', () => { self.skipWaiting(); });
+// Retire the old root-scoped Preorder Hub worker. No cache or fetch handler.
+self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => event.waitUntil(self.registration.unregister()));

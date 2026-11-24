@@ -14,6 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import api_v2 as main
+import public_launch as launch
 
 SCHEMA = """
 CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL);
@@ -96,6 +97,7 @@ def api(tmp_path, monkeypatch):
     with sqlite3.connect(path) as conn:
         conn.executescript(SCHEMA)
         conn.executescript(Path(__file__).with_name('weekly_summary.sql').read_text())
+        conn.executescript((Path(__file__).resolve().parents[1] / 'migrations/0032_public_launch.sql').read_text())
         conn.executemany('INSERT INTO users(id, username, password_hash) VALUES (?, ?, ?)',
                          [(1, 'user1', 'not-a-password'), (2, 'user2', 'not-a-password')])
     for key, value in {
@@ -111,6 +113,7 @@ def api(tmp_path, monkeypatch):
         'ALLOW_LEGACY_PLAINTEXT': False,
     }.items():
         monkeypatch.setattr(main, key, value)
+    monkeypatch.setattr(launch, "settings", launch.LaunchSettings())
     stub = TursoHTTPStub(path)
     # Test the actual application's HTTP adapter, not a substitute get_db_client.
     http = httpx.AsyncClient(transport=httpx.MockTransport(stub.handle))
@@ -248,7 +251,7 @@ def test_move_failure_rolls_back(api):
     assert client.get('/get_collection').json() == []
 
 
-def test_password_migration_and_exact_new_password(api):
+def test_password_migration_and_exact_new_password(api, monkeypatch):
     client, path, _ = api
     salt = 'a' * 32
     legacy = salt + '$' + hashlib.pbkdf2_hmac('sha256', b'oldpass', salt.encode(), 100000).hex()
@@ -257,10 +260,12 @@ def test_password_migration_and_exact_new_password(api):
     assert client.post('/login', data={'username': 'user1', 'password': 'oldpass'}).status_code == 200
     with sqlite3.connect(path) as conn:
         assert conn.execute('SELECT password_hash FROM users WHERE id=1').fetchone()[0].startswith('$argon2id$')
-    assert client.post('/register', json={'username':'user3','password':' password '}).status_code == 200
-    assert client.post('/login', data={'username':'user3','password':' password '}).status_code == 200
-    assert client.post('/login', data={'username':'user3','password':'password'}).status_code == 401
-    assert client.post('/register', json={'username':'user3','password':' password '}).status_code == 409
+    enable_launch(monkeypatch)
+    body = registration('user3', ' long password ')
+    assert client.post('/register', json=body).status_code == 200
+    assert client.post('/login', data={'username':'user3','password':' long password '}).status_code == 200
+    assert client.post('/login', data={'username':'user3','password':'long password'}).status_code == 401
+    assert client.post('/register', json=body).status_code == 409
 
 
 def test_token_validation(api):
@@ -336,3 +341,124 @@ def test_regional_route(api):
     client.db_stub.route = True
     assert client.get('/get_preorders').status_code == 200
     assert any(url.startswith('https://regional.test.turso.io/') for url, _ in client.db_stub.requests)
+
+
+# 3.2 tests; SQLite through the same simulated HTTPS protocol, not production.
+def enable_launch(monkeypatch, **overrides):
+    options = dict(enabled=True, signup=True, admin_id='1', operator='Test operator',
+        email='test@example.invalid', privacy_url='https://example.invalid/privacy',
+        terms_url='https://example.invalid/terms', policy_version='2026-11-test')
+    options.update(overrides)
+    monkeypatch.setattr(launch, 'settings', launch.LaunchSettings(**options))
+
+def registration(username, password='secure-test-password'):
+    return dict(username=username, password=password, accept_terms=True, policy_version='2026-11-test')
+
+def as_user(user_id):
+    return {'Authorization': 'Bearer '+main.create_access_token(user_id)}
+
+def test_public_launch_closed_by_default(api):
+    client, path, _ = api
+    assert client.get('/public/config').json()['signup_enabled'] is False
+    assert client.post('/register', json=registration('closed')).status_code == 403
+    assert client.get('/account/export').status_code == 503
+    assert client.get('/get_preorders').status_code == 200
+
+def test_policy_required_and_versioned(api, monkeypatch):
+    client, path, _ = api
+    enable_launch(monkeypatch, terms_url='javascript:bad')
+    assert client.get('/public/config').json()['signup_enabled'] is False
+    assert client.post('/register', json=registration('invalid')).status_code == 403
+    enable_launch(monkeypatch)
+    assert client.get('/public/config').json()['signup_enabled'] is True
+    for patch in ({'accept_terms':False}, {'policy_version':'outdated'}, {'password':'shortpass'}):
+        assert client.post('/register', json={**registration('invalid'), **patch}).status_code == 422
+    assert client.post('/register', json=registration('new')).status_code == 200
+    with sqlite3.connect(path) as db:
+        assert db.execute('SELECT version FROM public_terms_acceptance').fetchall() == [('2026-11-test',)]
+    assert client.get('/public/config').headers['cache-control'] == 'no-store'
+
+def test_no_admin_or_cross_user_access(api, monkeypatch):
+    client, path, _ = api
+    enable_launch(monkeypatch)
+    add(client, 'PRIVATE-1')
+    add(client, 'PRIVATE-2')
+    assert client.get('/admin/overview', headers=as_user(2)).status_code == 403
+    assert client.get('/account/capabilities', headers=as_user(2)).json() == {'public_features':True,'admin':False,'can_delete':True}
+    response = client.get('/account/export', headers=as_user(2))
+    assert response.status_code == 200
+    assert response.json()['games'] == []
+    assert response.json()['account']['username'] == 'user2'
+    assert 'password_hash' not in response.text and 'PRIVATE-1' not in response.text
+    assert 'attachment' in response.headers['content-disposition']
+    assert client.get('/account/export', headers={'Authorization':'Bearer invalid'}).status_code == 401
+
+def test_feedback_and_daily_activity(api, monkeypatch):
+    client, path, _ = api
+    enable_launch(monkeypatch)
+    assert client.get('/get_preorders', headers=as_user(2)).status_code == 200
+    assert client.post('/feedback', json={'category':'bug','message':'Błąd w kalendarzu premier'}, headers=as_user(2)).status_code == 200
+    assert client.post('/feedback', json={'category':'wrong','message':'Błąd w kalendarzu premier'}).status_code == 422
+    d=client.get('/admin/overview').json()
+    assert d['users']==2 and d['active_7d']==1 and d['feedback_count']==1
+    assert d['feedback'][0]['message']=='Błąd w kalendarzu premier'
+    assert client.get('/account/export').json()['feedback']==[]
+    assert len(client.get('/account/export', headers=as_user(2)).json()['feedback'])==1
+
+def test_account_deletion_and_retired_ids(api, monkeypatch):
+    client, path, _ = api
+    enable_launch(monkeypatch)
+    assert client.post('/register', json=registration('to_delete')).status_code == 200
+    login=client.post('/login', data={'username':'to_delete','password':'secure-test-password'}).json()
+    uid=login['user_id']; headers={'Authorization':'Bearer '+login['access_token']}
+    assert client.post('/add', json={'title':'Game','platform':'PC','offers':[{'store_name':'Shop','price':20}]}, headers=headers).status_code == 200
+    assert client.post('/feedback', json={'category':'idea','message':'Test suggestion'}, headers=headers).status_code == 200
+    add(client, 'Admin keeps this')
+    assert client.post('/account/delete', json={'password':'wrong','confirmation':'USUN'}, headers=headers).status_code == 403
+    assert client.post('/account/delete', json={'password':'secure-test-password','confirmation':'NO'}, headers=headers).status_code == 422
+    assert client.post('/account/delete', json={'password':'secure-test-password','confirmation':'USUN'}).status_code == 403
+    assert client.post('/account/delete', json={'password':'secure-test-password','confirmation':'USUN'}, headers=headers).status_code == 200
+    with sqlite3.connect(path) as db:
+        assert db.execute('SELECT id FROM users WHERE id=?',(uid,)).fetchone() is None
+        assert db.execute('SELECT id FROM public_retired_users').fetchone()==(uid,)
+        assert db.execute('SELECT COUNT(*) FROM public_feedback').fetchone()[0]==0
+        assert db.execute('SELECT COUNT(*) FROM public_terms_acceptance').fetchone()[0]==0
+        assert db.execute('SELECT COUNT(*) FROM games').fetchone()[0]==1
+        assert db.execute('SELECT COUNT(*) FROM store_offers').fetchone()[0]==1
+    assert client.get('/get_preorders', headers=headers).status_code==401
+    assert client.post('/register', json=registration('new_after_delete')).status_code==200
+    new=client.post('/login', data={'username':'new_after_delete','password':'secure-test-password'}).json()
+    assert new['user_id']>uid
+    assert client.get('/get_preorders', headers=headers).status_code==401
+
+def test_delete_rolls_back_on_db_error(api, monkeypatch):
+    client, path, _ = api
+    enable_launch(monkeypatch)
+    assert client.post('/register', json=registration('rollback')).status_code == 200
+    login=client.post('/login', data={'username':'rollback','password':'secure-test-password'}).json()
+    headers={'Authorization':'Bearer '+login['access_token']}
+    assert client.post('/add',json={'title':'keep','platform':'PC'},headers=headers).status_code==200
+    with sqlite3.connect(path) as db:
+        db.execute("CREATE TRIGGER fail_delete BEFORE DELETE ON users BEGIN SELECT RAISE(ABORT,'test'); END")
+    assert client.post('/account/delete',json={'password':'secure-test-password','confirmation':'USUN'},headers=headers).status_code==500
+    assert len(client.get('/get_preorders',headers=headers).json())==1
+    with sqlite3.connect(path) as db:
+        assert db.execute('SELECT COUNT(*) FROM public_retired_users').fetchone()[0]==0
+
+def test_auth_rate_limiter(api):
+    client, _, _ = api
+    for _ in range(15):
+        assert client.post('/login',data={'username':'nonexistent','password':'wrong'}).status_code==401
+    response=client.post('/login',data={'username':'nonexistent','password':'wrong'})
+    assert response.status_code==429 and 'Retry-After' in response.headers
+
+def test_public_features_missing_migration_does_not_break_existing_reads(api,monkeypatch):
+    client,path,_=api
+    enable_launch(monkeypatch)
+    with sqlite3.connect(path) as db:
+        db.execute('DROP TABLE public_activity')
+        db.execute('DROP TABLE public_terms_acceptance')
+    assert client.get('/get_preorders').status_code==200
+    assert client.post('/register',json=registration('no-migration')).status_code==500
+    with sqlite3.connect(path) as db:
+        assert db.execute("SELECT id FROM users WHERE username='no-migration'").fetchone() is None

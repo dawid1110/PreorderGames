@@ -2,16 +2,56 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0c0e17">
-  <title>Preorder Hub</title>
-  <link rel="icon" href="./v3/assets/icon-192.png">
-  <script>
-    location.replace('./v3/index.html' + location.search + (location.hash || ""));
-  </script>
-  <noscript><meta http-equiv="refresh" content="0; url=./v3/index.html"></noscript>
+  <title>Preorder Hub — Twoje gry. Twoje premiery. Twój budżet.</title>
+  <meta name="description" content="Zarządzaj preorderami gier, planuj wydatki, śledź premiery i buduj własną kolekcję. Wypróbuj Preorder Hub bez rejestracji.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Preorder Hub — gamingowe centrum zakupów">
+  <meta property="og:description" content="Preordery, kalendarz premier, kosztorys i kolekcja w jednym miejscu. Zobacz demo.">
+  <meta property="og:url" content="https://preorderhub.pl/">
+  <meta property="og:image" content="https://preorderhub.pl/launch/share.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://preorderhub.pl/">
+  <link rel="icon" href="v3/assets/icon-192.png">
+  <link rel="stylesheet" href="launch/style.css">
+  <script defer src="launch/landing.js"></script>
 </head>
 <body>
-  <p>Otwieranie Preorder Hub 3.1. <a href="./v3/index.html">Przejdź do aplikacji</a>.</p>
+<a class="skip" href="#main">Przejdź do treści</a>
+<header class="site-header wrap">
+  <a class="logo" href="./" aria-label="Preorder Hub, strona główna"><img src="v3/assets/icon-192.png" alt="" width="40" height="40"><span>PREORDER <b>HUB</b><small>GAMING COMMAND CENTER</small></span></a>
+  <nav aria-label="Menu strony"><a class="nav-link" href="#funkcje">Funkcje</a><a class="nav-link" href="#android">Aplikacja mobilna</a><a class="button secondary" href="v3/index.html">Zaloguj się <span aria-hidden="true">↗</span></a></nav>
+</header>
+<main id="main">
+  <section class="hero wrap">
+    <div class="hero-copy"><p class="kicker"><span class="status-dot"></span> STWORZONE PRZEZ GRACZA DLA GRACZY</p>
+      <h1>Twoje gry.<br>Twoje premiery.<br><em>Twój budżet.</em></h1>
+      <p class="lead">Koniec z rozrzuconymi zamówieniami i arkuszami. Zaplanuj kolejną premierę, porównaj zapisane ceny i zbuduj swoją kolekcję gier w jednym miejscu.</p>
+      <div class="actions"><a class="button primary" href="v3/index.html?demo=1">Wypróbuj demo <span aria-hidden="true">→</span></a><a class="button secondary" href="v3/index.html?register=1">Utwórz konto</a></div>
+      <p class="hero-note">Demo bez konta · Bez zapisu do bazy · Komputer i Android</p>
+    </div>
+    <div class="hero-visual">
+      <div class="visual-glow"></div><div class="preview"><div class="preview-top"><span class="window-dots"><i></i><i></i><i></i></span><span>preorderhub.pl / v3</span><span class="preview-tag">DEMO</span></div><a href="v3/index.html?demo=1" aria-label="Otwórz działający dashboard demo"><img src="launch/dashboard.webp" width="1440" height="1000" alt="Podgląd dashboardu Preorder Hub z kalendarzem, najbliższą premierą i kosztorysem" fetchpriority="high"></a></div>
+      <div class="preview-caption"><span>01 / TWOJE CENTRUM GIER</span><a href="v3/index.html?demo=1">Otwórz interaktywny podgląd ↗</a></div>
+    </div>
+  </section>
+  <section class="value-strip wrap" aria-label="Najważniejsze możliwości"><div><strong>01</strong><span><b>Jedna lista</b><small>Wszystkie zamówienia gier</small></span></div><div><strong>02</strong><span><b>Plan wydatków</b><small>Najniższe zapisane ceny</small></span></div><div><strong>03</strong><span><b>Twoja biblioteka</b><small>Odebrane gry w kolekcji</small></span></div></section>
+  <section class="features wrap" id="funkcje"><div class="section-intro"><p class="kicker">ZAPLANUJ. ZAMÓW. ZAGRAJ.</p><h2>Wszystko, czego potrzebujesz przed premierą.</h2><p>Przejmij kontrolę nad swoimi zakupami, niezależnie od platformy i sklepu.</p></div>
+    <div class="feature-grid">
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M7 10v6M4 13h6M16 11h.01M19 14h.01"/></svg></span><h3>Preordery</h3><p>Dodawaj gry, wybieraj platformę i zapisuj oferty ze sklepów, ceny oraz numery zamówień.</p></article>
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 15h3M14 15h2"/></svg></span><h3>Kalendarz premier</h3><p>Sprawdzaj daty premier swoich gier i zobacz, ile dni zostało do kolejnego tytułu.</p></article>
+      <article><span class="feature-icon green"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M16 12h5M7 9h6M7 16h4"/></svg></span><h3>Kosztorys</h3><p>Planuj wydatki miesiąc po miesiącu, na podstawie najniższych zapisanych ofert.</p></article>
+      <article><span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 4h5v16H4zM11 4h5v16h-5zM18 5l3-1 3 15-4 1z"/></svg></span><h3>Moja kolekcja</h3><p>Po odebraniu gry przenieś ją do swojej biblioteki. Przeglądaj okładki i platformy.</p></article>
+    </div>
+    <p class="fine-print">Ceny i terminy są danymi zapisanymi w aplikacji; nie są automatycznie monitorowane w sklepach.</p>
+  </section>
+  <section class="mobile-section wrap" id="android">
+    <div class="phone-preview"><div class="phone"><img src="launch/mobile.webp" width="412" height="860" alt="Preorder Hub w mobilnym widoku demonstracyjnym" loading="lazy"></div><div class="phone-glow"></div></div>
+    <div class="mobile-copy"><p class="kicker">ANDROID FIRST</p><h2>Twój hub zawsze pod ręką.</h2><p>Dodaj Preorder Hub do ekranu głównego telefonu lub tabletu i korzystaj z niego jak z aplikacji. Nie musisz instalować niczego ze sklepu.</p><ol class="install-steps"><li><span>1</span> Otwórz właściwą aplikację w Chrome na Androidzie.</li><li><span>2</span> Wybierz „Zainstaluj aplikację” i potwierdź w przeglądarce.</li><li><span>3</span> Uruchom aplikację z ikony na ekranie głównym.</li></ol><a class="button secondary" href="v3/index.html">Otwórz aplikację <span aria-hidden="true">→</span></a><p class="fine-print">Dostępna także na iPhonie, iPadzie i komputerze. Synchronizacja danych wymaga internetu.</p></div>
+  </section>
+  <section class="closing wrap"><div><p class="kicker">TWOJA KOLEJNA PRZYGODA</p><h2>Zobacz, jak działa Preorder Hub.</h2><p>Przetestuj dodawanie gier, budżet i kolekcję na przykładowych danych.</p></div><a class="button primary" href="v3/index.html?demo=1">Uruchom demo →</a></section>
+</main>
+<footer class="site-footer wrap"><div><a class="logo" href="./"><img src="v3/assets/icon-192.png" alt="" width="34" height="34"><span>PREORDER <b>HUB</b></span></a><p>Niezależny projekt dla graczy · 3.2 Public Launch</p></div><nav aria-label="Informacje"><a href="privacy.html">Prywatność</a><a href="terms.html">Regulamin</a><a href="recover.html">Pomoc PWA</a><a href="v3/index.html#settings">Zgłoszenia</a><a href="https://www.igdb.com/" rel="noopener noreferrer">Okładki: IGDB</a></nav></footer>
 </body>
 </html>

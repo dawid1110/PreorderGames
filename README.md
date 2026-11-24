@@ -1,5 +1,7 @@
-# Preorder Hub 3.1
+# Preorder Hub 3.2 — Public Launch
 
-**[START_TUTAJ.md](START_TUTAJ.md)** — kompletna instrukcja publikacji, instalacji PWA i konfiguracji.
+**[START_TUTAJ.md](START_TUTAJ.md)** — rozpakowanie, wdrożenie, naprawa PWA i konfiguracja.
 
-Aktywny frontend: `v3/`. Aktywny backend: `api_v2.py`.
+[Zmiany 3.2](README_PUBLIC_LAUNCH.md) · [PWA](README_GUI_V3.md) · [Testy](TESTY.md)
+
+Aktywny frontend: `v3/`, strona publiczna: `index.html`. Backend: `api_v2.py` + `public_launch.py` (Turso HTTPS). Nowa rejestracja i dodatkowe funkcje wyłączone domyślnie.
