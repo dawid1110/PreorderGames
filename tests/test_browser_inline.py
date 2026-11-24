@@ -26,7 +26,7 @@ def load_app(page,demo):
     html=(V3/'index.html').read_text()
     html=re.sub(r'<link[^>]+>','',html)
     html=re.sub(r'<script defer src="[^\"]+"></script>','',html)
-    js=(V3/'app.js').read_text().replace("const demo=new URLSearchParams(location.search).get('demo')==='1';",f'const demo={str(demo).lower()};').replace('return value;try{const u=new URL(value);','return window.testAssets[value]||value;try{const u=new URL(value);')
+    js=(V3/'app.js').read_text().replace("const demo=new URLSearchParams(location.search).get('demo')==='1';",f'const demo={str(demo).lower()};').replace('return "/v3/"+value;try{const u=new URL(value);','return window.testAssets[value]||value;try{const u=new URL(value);')
     pwa=(V3/'pwa.js').read_text()
     html=html.replace('</head>','<style>'+css+'</style></head>')
     html=html.replace('</body>','<script>'+mock+'\nwindow.PREORDER_DEMO='+str(demo).lower()+';window.testAssets='+json.dumps(assets)+';\n'+(V3/'config.js').read_text()+'\n'+pwa+'\n'+js+'</script></body>')
@@ -58,7 +58,7 @@ with sync_playwright() as p:
         pg=context.new_page();pg.set_default_timeout(5000);pg.on('pageerror',lambda e:errors.append(str(e)))
         if width:pg.set_viewport_size({'width':width,'height':height})
         return pg
-    page=new_page();load_app(page,True);expect(page.locator('#app')).to_be_visible();expect(page.locator('#demo-notice')).to_be_visible();page.wait_for_timeout(100)
+    page=new_page();load_app(page,True);expect(page.locator('#app')).to_be_visible();expect(page.locator('#demo-notice')).to_be_visible();expect(page.locator('#boot-fallback')).to_be_hidden();page.wait_for_timeout(100)
     assert page.evaluate('mock.logs.length')==0
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     if CAPTURE:capture(page,'dashboard')
@@ -74,6 +74,7 @@ with sync_playwright() as p:
     mp=new_page(412,860);load_landing(mp);assert mp.evaluate('document.documentElement.scrollWidth <= innerWidth')
     if CAPTURE:mp.screenshot(path=ROOT.parent/'PreorderHub_3.2_landing_mobile.png',full_page=True)
     print('PASS: demo isolated from API, desktop and mobile layouts, landing image assets')
+    failed=new_page();failed.set_content((V3/'index.html').read_text());expect(failed.locator('#boot-fallback')).to_be_visible();expect(failed.locator('#auth')).to_be_hidden();
     user=new_page();load_app(user,False);expect(user.locator('#auth')).to_be_visible();user.locator('#auth-toggle').click();expect(user.locator('#auth-title')).to_have_text('Utwórz konto');user.locator('#auth-username').fill('Tester');user.locator('#auth-password').fill('long-test-password');user.locator('#auth-accept').check();user.locator('#auth-submit').click();expect(user.locator('#auth-title')).to_have_text('Witaj ponownie')
     user.locator('#auth-password').fill('long-test-password');user.locator('#auth-submit').click();expect(user.locator('#app')).to_be_visible();expect(user.locator('#connection-text')).to_have_text('Połączono z API');user.locator('#desktop-nav').get_by_role('button',name='Ustawienia').click();expect(user.get_by_role('button',name='Resetuj pamięć PWA')).to_be_visible();user.get_by_role('button',name='Otwórz narzędzia konta').click();expect(user.get_by_role('heading',name='Eksport danych')).to_be_visible()
     user.get_by_label('Typ zgłoszenia').select_option('bug');user.get_by_label('Wiadomość').fill('Przykładowy błąd');user.get_by_role('button',name='Wyślij zgłoszenie').click();expect(user.locator('.account-message')).to_have_text('Zgłoszenie zapisane. Dziękujemy!')

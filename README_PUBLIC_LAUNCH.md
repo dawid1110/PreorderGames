@@ -1,6 +1,6 @@
 # Preorder Hub 3.2 — dokumentacja zmian
 
-Instrukcja wdrożenia: [START_TUTAJ.md](START_TUTAJ.md). Wersja 3.2.0, wydanie statyczne 20261124-4.
+Instrukcja wdrożenia: [START_TUTAJ.md](START_TUTAJ.md). Opis funkcji 3.2.0; aktualny frontend 3.2.2, wydanie 20261124-6.
 
 ## Architektura
 
@@ -14,7 +14,7 @@ Publiczna strona `/` → demo (`/v3/index.html?demo=1`) lub konto (`/v3/index.ht
 | `recover.html`, `launch/recover.js` | Ręczna naprawa cache tylko Preorder Hub |
 | `v3/index.html`, `style.css`, `app.js` | Dotychczasowa SPA, formularze, dashboard, kolekcja, budżet, konto, narzędzia publiczne |
 | `v3/config.js` | Adres API, numer wersji, release i ustawienia regionalne |
-| `v3/pwa.js`, `v3/sw.js`, `v3/manifest.json` | Instalacja Android/iOS, statyczny cache, aktualizacja i zachowana tożsamość PWA |
+| `v3/pwa.js`, `v3/sw.js`, `v3/manifest.json` | Instalacja Android/iOS, aktualizacja bez cache stron i zachowana tożsamość PWA |
 | `sw.js` w korzeniu | Worker migracyjny wyrejestrowujący poprzedni root-scoped worker |
 | `_headers` | Sugestia nagłówków Cloudflare dla HTML/SW/recovery; skuteczność zależy od sposobu hostingu |
 | `api_v2.py` | Dotychczasowy backend HTTPS, integracja modułu publicznego, ochrona logowania, rejestracja z kontrolą regulaminu |

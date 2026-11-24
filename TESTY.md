@@ -1,10 +1,14 @@
-# Weryfikacja 3.2.0 (20261124-4)
+# Weryfikacja 3.2.2 (20261124-6)
 
-Wykonano w lokalnym środowisku:
-- `python -m pytest tests/test_preorder_https.py -q`: 27/27. Testy adaptera HTTPS z symulowanym serwerem Turso i SQLite, również autoryzacja, izolacja kont, rejestracja z wersją regulaminu, eksport, zgłoszenia, aktywność, transakcja usuwania, nieprzydzielanie ponowne ID, rollback i brak migracji przy istniejących odczytach.
-- `node tests/pwa_logic.test.cjs`: 25/25 grup. Symulowany runtime workera i przeglądarki; instalator, czekanie, jednorazowa migracja, aktywacja, odłożenie, odmowa, timeout, inne karty, cache i awaria sieci.
-- `node tests/recovery.test.cjs`: 2 przypadki (selektywne usuwanie i błąd).
-- `node tests/redirects.test.cjs`: 45 sprawdzeń adresów (39 starych i 6 landing page).
-- `python tests/test_browser_inline.py`: rzeczywisty Chromium, HTML/CSS/JS osadzone lokalnie, symulowana pamięć i API. Testy wizualne 1440 px oraz 412 px, izolacja demo, rejestracja, login, konto, eksport, feedback, admin, usunięcie, zamknięta rejestracja. Zrzuty ekranu wygenerowane z danych demo.
+Punkt wyjścia: aktualny przesłany ZIP `PreorderGames-main(1).zip`. W nim trzy pliki główne z poprzedniej poprawki zostały nadpisane/dodane do korzenia (`index.html`, `sw.js`, `config.js`), a `v3/` pozostało w wersji 3.2.0. Przywrócono główny landing i worker wygaszający starą rejestrację, zastosowano bezwzględne ścieżki v3 i usunięto przechwytywanie żądań przez worker. `api_v2.py` i `public_launch.py` pozostawiono identyczne z wejściem.
 
-Ograniczenia: środowisko blokuje top-level URL navigation (`ERR_BLOCKED_BY_ADMINISTRATOR`), więc nie było możliwe zweryfikowanie rzeczywistej rejestracji/aktywacji service workera ani end-to-end po URL. Test `tests/test_browser_launch.py` pozostawiono jako dodatkowy test odbioru na własnym komputerze (Playwright + Chromium + lokalny serwer). Zmień ścieżkę do Chromium, jeśli potrzeba. Brak połączenia z produkcyjnym Turso/Render/Cloudflare. Weryfikacja realnej aktualizacji z 3.1 i instalacji na fizycznym Androidzie jest konieczna po deployu. To nie pełny audyt bezpieczeństwa ani prawny.
+Wykonane testy:
+- `python -m pytest tests/test_preorder_https.py -q` — 27/27, symulowane Turso / SQLite, bez produkcyjnych danych.
+- `node tests/pwa_logic.test.cjs` — 24 grupy testów, w tym brak przechwytywania nawigacji i rejestracja workera przy adresie bez ukośnika.
+- `node tests/redirects.test.cjs` — 45 przypadków.
+- `node tests/recovery.test.cjs` — 2 przypadki.
+- `python tests/test_deployment_paths.py` — ścieżki wszystkich zasobów dla pięciu wariantów adresu v3, strona reklamowa i brak przechwytywania przez oba workery.
+- `python tests/test_browser_inline.py` — rzeczywisty Chromium, osadzone lokalne zasoby, symulowane API; demo, telefon/desktop, strona reklamowa, rejestracja, logowanie, konto, eksport, usuwanie konta i widoczny ekran awaryjny przy braku skryptów.
+- `node --check` — składnia zmienionych JS.
+
+Ograniczenia: nawigacja Chromium do lokalnego serwera zablokowana `ERR_BLOCKED_BY_ADMINISTRATOR`; test `tests/test_browser_launch.py` pozostawiono do wykonania na własnym komputerze. Nie sprawdzano aktualnego hostingu Cloudflare, faktycznego cyklu rejestracji workera na telefonie ani instalacji PWA na fizycznym Androidzie. PWA wymaga internetu; brak cache offline jest świadomą decyzją stabilizacyjną, a dostępność systemowego okna instalacji zależy od Chrome. Nie wykonano zmian zdalnych.

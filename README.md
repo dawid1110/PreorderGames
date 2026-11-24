@@ -1,4 +1,4 @@
-# Preorder Hub 3.2 — Public Launch
+# Preorder Hub 3.2.2 — Public Launch / stabilizacja GUI
 
 **[START_TUTAJ.md](START_TUTAJ.md)** — rozpakowanie, wdrożenie, naprawa PWA i konfiguracja.
 

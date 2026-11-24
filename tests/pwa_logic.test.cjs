@@ -118,7 +118,7 @@ function swHarness(options={}) {
   async function fetchEvent(url, {method='GET',mode='cors',authorized=false} = {}) {
     let handled = false, response;
     const request = {url,method,mode,headers:new Headers(authorized?{Authorization:'Bearer TEST'}:{})};
-    handlers.fetch({request,respondWith(p) {handled = true; response = p;}});
+    handlers.fetch?.({request,respondWith(p) {handled = true; response = p;}});
     return {handled,response:handled?await response:undefined};
   }
   async function message(data){let pending;handlers.message({data,waitUntil(p){pending=p;}});await pending;}
@@ -137,15 +137,15 @@ function swHarness(options={}) {
       assert.equal(bytes.readUInt32BE(16),size); assert.equal(bytes.readUInt32BE(20),size);
     }
     const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
-    assert.ok(html.indexOf('src="config.js?')<html.indexOf('src="pwa.js?'));
-    assert.ok(html.indexOf('src="pwa.js?')<html.indexOf('src="app.js?'));
+    assert.ok(html.indexOf('src="/v3/config.js?')<html.indexOf('src="/v3/pwa.js?'));
+    assert.ok(html.indexOf('src="/v3/pwa.js?')<html.indexOf('src="/v3/app.js?'));
     assert.equal((html.match(/data-pwa-install hidden/g)||[]).length,2);
     assert.ok(html.includes('aria-labelledby="pwa-title"'));
     assert.ok(!fs.readFileSync(path.join(root,'app.js'),'utf8').includes('serviceWorker.register'));
   });
   await test('Android shows instructions before and after login; one SW registration', async () => {
     const h=harness(); await tick();
-    assert.equal(h.calls.length,1); assert.equal(h.calls[0].url,'./sw.js'); assert.equal(h.calls[0].opts.scope,'./'); assert.equal(h.calls[0].opts.updateViaCache,'none');
+    assert.equal(h.calls.length,1); assert.equal(h.calls[0].url,'/v3/sw.js'); assert.equal(h.calls[0].opts.scope,'/v3/'); assert.equal(h.calls[0].opts.updateViaCache,'none');
     assert.ok(h.invites.every(n=>!n.hidden)); assert.ok(h.ids['pwa-native-install'].hidden);
     assert.equal(h.guides.find(g=>g.open).dataset.pwaGuide,'android');
     await h.buttons[0].fire('click'); assert.ok(h.ids['pwa-dialog'].open);
@@ -215,31 +215,21 @@ function swHarness(options={}) {
     next.registration.waiting=updating; updating.state='installed'; await updating.fire('statechange');
     assert.equal(next.ids['pwa-update'].hidden,false);
   });
-  await test('Worker install precaches only existing static files with reload semantics', async () => {
-    const h=swHarness();await h.lifecycle('install');assert.equal(h.state.added.length,12);
-    for(const req of h.state.added){assert.equal(req.cache,'reload');const url=new URL(req.url);assert.equal(url.origin,'https://preorderhub.pl');assert.ok(fs.existsSync(path.join(root,url.pathname.slice('/v3/'.length))));}
+  await test('Rescue release activates immediately without prefetching or claiming tabs', async () => {
+    const h=swHarness();await h.lifecycle('install');assert.equal(h.state.skips,1);assert.equal(h.state.added.length,0);assert.equal(h.state.opened.length,0);
   });
-  await test('Activation removes only this applications previous caches', async () => {
-    const h=swHarness();await h.lifecycle('activate');assert.deepEqual(h.state.deleted,['preorderhub-v3-shell-OLD']);
+  await test('Activation removes only Preorder Hub shell caches, including incorrectly rooted caches', async () => {
+    const h=swHarness({legacy:true});await h.lifecycle('activate');assert.deepEqual(h.state.deleted,['preorderhub-v3-shell-OLD','preorderhub-v3-shell-'+RELEASE,'preorderhub-v3-shell-20261124-2']);
   });
-  await test('Navigation offline serves consistent cached shell for scoped entry points', async () => {
-    const h=swHarness();h.state.entries.set('https://preorderhub.pl/v3/index.html','cached-index');
-    for(const url of ['https://preorderhub.pl/v3/','https://preorderhub.pl/v3/index.html']){const r=await h.fetchEvent(url,{mode:'navigate'});assert.equal(r.response,'cached-index');}
-    assert.equal(h.state.network.length,0);
+  await test('All navigations, redirect variants, assets and API requests bypass worker', async () => {
+    const h=swHarness();for(const url of ['https://preorderhub.pl/v3','https://preorderhub.pl/v3/','https://preorderhub.pl/v3/index','https://preorderhub.pl/v3/index.html','https://preorderhub.pl/v3/index.html?demo=1','https://preorderhub.pl/v3/index.html?pwa-recover=1','https://preorderhub.pl/v3/style.css','https://preorder-api-pdjz.onrender.com/get_preorders','https://preorderhub.pl/'])for(const mode of ['navigate','cors'])assert.equal((await h.fetchEvent(url,{mode})).handled,false,url);
+    assert.equal(h.state.network.length,0);assert.equal(h.state.opened.length,0);
   });
-  await test('API, POST, Authorization, arbitrary paths, outside-scope and demo requests bypass SW', async () => {
-    const h=swHarness();
-    const scenarios=[['https://preorder-api-pdjz.onrender.com/get_preorders',{}],['https://preorderhub.pl/v3/index.html',{method:'POST'}],['https://preorderhub.pl/v3/index.html',{authorized:true}],['https://preorderhub.pl/v3/private.json',{}],['https://preorderhub.pl/v3/private',{mode:'navigate'}],['https://preorderhub.pl/index.html',{mode:'navigate'}],['https://preorderhub.pl/v3/index.html?demo=1',{mode:'navigate'}],['https://preorderhub.pl/v3/index.html?pwa-recover=1',{mode:'navigate'}]];
-    for(const [url,opts] of scenarios)assert.equal((await h.fetchEvent(url,opts)).handled,false,url);
-    assert.equal(h.state.opened.length,0);
+  await test('Explicit update still supported; unknown messages do nothing', async()=>{
+    const h=swHarness();await h.message({type:'UNKNOWN'});assert.equal(h.state.skips,0);await h.message({type:'PREORDER_SKIP_WAITING'});assert.equal(h.state.skips,1);
   });
-  await test('Allowed missing asset uses network without dynamically caching the response', async () => {
-    const h=swHarness(); const r=await h.fetchEvent('https://preorderhub.pl/v3/pwa.js?v='+RELEASE);assert.equal(await r.response.text(),'network-response');assert.equal(h.state.added.length,0);assert.equal(h.state.network.length,1);
-  });
-  await test('Migration activates legacy releases only, normal installation waits', async()=>{
-    const legacy=swHarness({legacy:true});await legacy.lifecycle('install');assert.equal(legacy.state.skips,1);
-    const next=swHarness();await next.lifecycle('install');assert.equal(next.state.skips,0);
-    await next.message({type:'UNKNOWN'});assert.equal(next.state.skips,0);await next.message({type:'PREORDER_SKIP_WAITING'});assert.equal(next.state.skips,1);
+  await test('Slashless URL cannot register a root-scoped worker', async()=>{
+    const h=harness({url:'https://preorderhub.pl/v3'});await tick();assert.equal(h.calls[0].url,'/v3/sw.js');assert.equal(h.calls[0].opts.scope,'/v3/');h.window.PREORDER_PWA.reset();assert.equal(h.redirect,'https://preorderhub.pl/recover.html');
   });
   await test('Later hides banner, manual check restores it, no auto-reload',async()=>{
     const w=new EventTargetStub();const h=harness({waiting:w});await tick();await h.ids['pwa-later'].fire('click');assert.ok(h.ids['pwa-update'].hidden);await h.window.PREORDER_PWA.checkUpdate();assert.ok(!h.ids['pwa-update'].hidden);assert.equal(h.reloads,0);
@@ -259,8 +249,8 @@ function swHarness(options={}) {
   await test('Cleanup unregisters only known root registration',async()=>{
     const removed=[];const reg=(scope,script)=>({scope,active:{scriptURL:script},unregister:async()=>{removed.push(scope);return true;}});const h=harness({regs:[reg('https://preorderhub.pl/','https://preorderhub.pl/sw.js'),reg('https://preorderhub.pl/v3/','https://preorderhub.pl/v3/sw.js'),reg('https://preorderhub.pl/other/','https://preorderhub.pl/other/sw.js')]});await tick();assert.deepEqual(removed,['https://preorderhub.pl/']);h.window.PREORDER_PWA.reset();assert.equal(h.redirect,'https://preorderhub.pl/recover.html');
   });
-  await test('Cache failure falls through to network; both failing returns readable 503',async()=>{
-    const h=swHarness({openError:true});const ok=await h.fetchEvent('https://preorderhub.pl/v3/index.html',{mode:'navigate'});assert.equal(await ok.response.text(),'network-response');const off=swHarness({matchError:true,networkError:true});const r=await off.fetchEvent('https://preorderhub.pl/v3/index.html',{mode:'navigate'});assert.equal(r.response.status,503);assert.ok((await r.response.text()).includes('Napraw pamięć aplikacji'));
+  await test('Network failure remains under browser control, without stale shell fallback',async()=>{
+    const h=swHarness({networkError:true,openError:true});assert.equal((await h.fetchEvent('https://preorderhub.pl/v3/index.html',{mode:'navigate'})).handled,false);
   });
   console.log(`\n${passed} test groups passed. Native Android installation and rendering require device/browser acceptance.`);
 })().catch(error=>{console.error(error);process.exitCode=1;});

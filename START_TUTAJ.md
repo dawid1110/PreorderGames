@@ -1,34 +1,14 @@
-# Preorder Hub 3.2.0 — Public Launch + naprawa PWA
+# Preorder Hub 3.2.2 — przywrócenie działania GUI
 
-**Wydanie: 20261124-4.** Kompletne repozytorium, nie paczka samych różnic. Punktem wyjścia jest działająca wersja 3.1. Nie wykonano zdalnego wdrożenia ani operacji w produkcyjnej bazie.
+**Wydanie 20261124-6.** Oparte na Twoim aktualnym archiwum GitHub `PreorderGames-main(1).zip`, a nie na starszym repozytorium. Właściwy backend zachowano bajt w bajt. Nie modyfikowano żadnych danych produkcyjnych.
 
-## 1. Rozpakuj i wdroż (bez migracji bazy)
+1. Zrób kopię repozytorium. W Eksploratorze Windows wybierz **Wyodrębnij wszystkie**, jako miejsce docelowe wskaż katalog repozytorium, w którym jest `api_v2.py`. Potwierdź nadpisanie. Nie kopiuj pojedynczych plików z folderu v3 do korzenia. Archiwum zachowuje strukturę i nie ma dodatkowego katalogu nadrzędnego.
+2. Upewnij się, że `index.html` jest stroną reklamową i odwołuje się do `launch/style.css`, natomiast `v3/index.html` do `/v3/style.css`. `v3/config.js` pokazuje wersję 3.2.2. Stare, przypadkowo dodane pliki `config.js`, `pwa_logic.test.cjs`, `test_pwa_navigation_browser.py` w korzeniu można usunąć z Git; nie są wykorzystywane przez nowe GUI. Rozpakowanie ZIP nie usuwa istniejących plików.
+3. `git status`, sprawdź zmiany i brak sekretów, `git add -A`, `git commit -m "Restore frontend paths and simplify PWA 3.2.2"`, `git push`.
+4. Po deployu najpierw sprawdź w incognito `/`, `/v3/index.html?demo=1`, `/v3/index.html`. Następnie w zwykłym Chrome wejdź na `/recover.html` i zresetuj pamięć PWA po zapisaniu zmian i zamknięciu innych okien. Jeżeli nadal występują błędy, DevTools → Application → Service Workers → Unregister. W ostateczności wyczyść dane tej witryny (wymaga ponownego logowania). Na Androidzie użyj tej samej strony naprawczej; dopiero gdy to nie pomaga, odinstaluj PWA i zainstaluj z `/v3/index.html`.
+5. **Nie zmieniaj Rendera ani Turso.** Komenda startowa pozostaje `uvicorn api_v2:app --host 0.0.0.0 --port $PORT`. Nie wykonuj migracji z powodu tego hotfixa. Jeśli CDN nadal podaje poprzednie HTML lub workery, sprawdź status deployu i rzeczywiste nagłówki Cache-Control; ewentualnie wyczyść właściwe adresy w cache Cloudflare.
 
-1. Zrób kopię aktualnego repozytorium (w tym lokalnej konfiguracji), najlepiej zapisz działającą wersję w Git. Nie kasuj `.git/` ani lokalnych sekretów.
-2. Rozpakuj cały ZIP do katalogu `PreorderGames`, obok dotychczasowego `api_v2.py`, z zastąpieniem plików. ZIP nie ma dodatkowego katalogu nadrzędnego. **Nie wypakowuj `v3/` do korzenia.**
-3. Zatwierdź zmiany. Sprawdź `git status` i upewnij się, że nie dodajesz sekretów:
-
-```bash
-git status
-git add -A
-git commit -m "Preorder Hub 3.2 - Public Launch and PWA recovery"
-git push
-```
-
-4. Opublikuj kompletny frontend w Cloudflare, sprawdź ukończenie deployu. W Render zostaw `pip install -r requirements.txt` oraz `uvicorn api_v2:app --host 0.0.0.0 --port $PORT`. Dockerfile również uruchamia `api_v2:app`. Nowy `public_launch.py` musi być obecny obok `api_v2.py`. Dotychczasowe sekrety, adres Turso HTTPS i adres API zachowaj. Nie wykonuj migracji na tym etapie. Jeśli masz już ustawione zmienne `PUBLIC_*`, upewnij się, że oba przełączniki są `false`.
-5. Sprawdź `https://preorderhub.pl/` (strona powitalna), `https://preorderhub.pl/v3/index.html?demo=1` (demo), a następnie `https://preorderhub.pl/v3/index.html` (dotychczasowe konto, dane). Sprawdź także `/ping` backendu i `/public/config`. Nowa rejestracja i narzędzia konta pozostają domyślnie wyłączone, logowanie istniejącego użytkownika oraz operacje na grach nie potrzebują nowych tabel.
-
-## 2. Rozwiąż obecny problem PWA
-
-Po deployu wersji 3.2 wejdź w zwykłym Chrome na **https://preorderhub.pl/recover.html**. Zapisz formularze i zamknij pozostałe karty oraz okna PWA, a następnie wybierz **Resetuj pamięć PWA i otwórz aplikację**. Reset usuwa wyłącznie znane rejestracje `/sw.js`, `/v3/sw.js` oraz cache o prefiksie `preorderhub-v3-shell-`. Nie czyta ani nie usuwa `localStorage`, nie wywołuje API i nie zmienia gier. Potrzebujesz połączenia z internetem, żeby pobrać nowy frontend.
-
-Przejście z wydań 20261124-2 i -3 dodatkowo próbuje jednorazowo aktywować nowy worker bez czekania na zamknięcie kart. Nie wymusza przeładowania dokumentów. Przy kolejnych wydaniach okno aktualizacji ma przyciski **Później** i **Zaktualizuj teraz**; aktywacja przeładowuje wyłącznie okno, które o nią poprosiło, po zapisaniu zmian. Ustawienia → Aplikacja → Sprawdź aktualizacje / Resetuj pamięć PWA.
-
-Jeśli `/recover.html` nie działa w zwykłym Chrome, otwórz DevTools → Application → Service Workers, wyrejestruj stare workery Preorder Hub, zamknij pozostałe okna i odśwież. `Clear site data` to ostateczność (wyloguje Cię). Sprawdź działanie w incognito i nagłówki Cloudflare. Plik `_headers` sugeruje rewalidację HTML i workerów, o ile sposób hostowania go obsługuje; sprawdź faktyczne nagłówki po deployu. Gdy CDN ma regułę Cache Everything, wyłącz ją dla HTML i workerów lub wyczyść właściwe adresy cache CDN.
-
-## 3. Instalacja Android / tablet / iOS
-
-Instaluj **z `/v3/index.html`**, nie z publicznego landing page ani demo. Przycisk `Zainstaluj aplikację` otwiera instrukcję i, jeśli dostępny, systemowy instalator Chrome. Możesz też użyć menu Chrome. Identyfikator, start URL i zakres manifestu v3 zachowano, więc wcześniejsza instalacja v3 nadal ma tę samą tożsamość. Stare `/pwa-list.html` przekierowuje do aplikacji. Na iOS użyj Safari → Udostępnij → Dodaj do ekranu początkowego. Po instalacji sprawdź otwarcie z ikony. Offline dostępny jest jedynie statyczny interfejs; operacje na danych wymagają internetu.
+PWA wymaga połączenia z internetem. Nie przechwytujemy nawigacji ani nie przechowujemy stron w CacheStorage; przycisk instalacji i manifest pozostają dostępne. Zobacz `README_GUI_V3.md`.
 
 ## 4. Włącz funkcje publiczne później
 

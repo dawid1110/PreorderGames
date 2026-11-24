@@ -114,7 +114,7 @@
   const updateMessage = byId('pwa-update-message');
   const canReload = () => typeof window.PREORDER_CAN_RELOAD !== 'function' || window.PREORDER_CAN_RELOAD();
   const say = message => { if (updateMessage) updateMessage.textContent = message; };
-  const recoveryUrl = () => new URL('../recover.html', location.href).href;
+  const recoveryUrl = () => new URL('/recover.html', location.href).href;
   let registration = null;
   let dismissed = null;
   let requested = false;
@@ -218,8 +218,8 @@
   // apps sharing this origin or the current /v3/ registration.
   async function retireRootWorker() {
     if (!sw.getRegistrations) return;
-    const rootScope = new URL('../', location.href).href;
-    const rootScript = new URL('../sw.js', location.href).href;
+    const rootScope = new URL('/', location.href).href;
+    const rootScript = new URL('/sw.js', location.href).href;
     try {
       const regs = await sw.getRegistrations();
       await Promise.allSettled(regs.filter(r => r.scope === rootScope &&
@@ -234,7 +234,7 @@
   });
   (async () => {
     await retireRootWorker();
-    registration = await sw.register('./sw.js', {scope:'./',updateViaCache:'none'});
+    registration = await sw.register('/v3/sw.js', {scope:'/v3/',updateViaCache:'none'});
     activeAtLoad = registration.active;
     showUpdate();
     const watchInstallingWorker = () => {

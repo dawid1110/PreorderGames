@@ -9,29 +9,35 @@
   <meta name="apple-mobile-web-app-title" content="Preorder Hub">
   <meta name="description" content="Preorder Hub — Twoje centrum premier, zamówień i kolekcji gier.">
   <title>Preorder Hub — Gaming Command Center</title>
-  <link rel="icon" href="assets/icon-192.png">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <link id="pwa-manifest" rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=20261124-4">
-  <script defer src="config.js?v=20261124-4"></script>
-  <script defer src="pwa.js?v=20261124-4"></script>
-  <script defer src="app.js?v=20261124-4"></script>
+  <link rel="icon" href="/v3/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/v3/assets/icon-192.png">
+  <link id="pwa-manifest" rel="manifest" href="/v3/manifest.json">
+  <link rel="stylesheet" href="/v3/style.css?v=20261124-6">
+  <script defer src="/v3/config.js?v=20261124-6"></script>
+  <script defer src="/v3/pwa.js?v=20261124-6"></script>
+  <script defer src="/v3/app.js?v=20261124-6"></script>
 </head>
 <body>
+  <section id="boot-fallback" role="status" style="box-sizing:border-box;max-width:560px;margin:12vh auto;padding:24px;font:16px/1.55 system-ui,sans-serif;background:#141824;color:#edf0ff;border-radius:16px">
+    <h1 style="font-size:24px;margin:0 0 12px">Uruchamianie Preorder Hub</h1>
+    <p id="boot-message">Wczytywanie interfejsu. Jeśli ten ekran nie znika, odśwież stronę lub użyj narzędzia naprawy PWA.</p>
+    <p><a style="color:#c4b5fd" href="/v3/?pwa-recover=1">Spróbuj ponownie</a> · <a style="color:#c4b5fd" href="/recover.html">Napraw PWA</a></p>
+    <noscript>Do działania aplikacji wymagany jest JavaScript.</noscript>
+  </section>
   <aside id="pwa-update" class="pwa-update-panel" hidden aria-label="Aktualizacja aplikacji"><div><strong id="pwa-update-title">Dostępna aktualizacja Preorder Hub</strong><p id="pwa-update-message" role="status">Zapisz rozpoczęte zmiany w tym i innych oknach przed aktualizacją.</p></div><div class="pwa-update-actions"><button id="pwa-later" class="btn secondary" type="button">Później</button><button id="pwa-update-now" class="btn primary" type="button">Zaktualizuj teraz</button></div></aside>
   <a class="skip" href="#content">Przejdź do treści</a>
   <div id="auth" class="auth-screen" hidden>
-    <div class="auth-art"><div class="auth-brand brand"><span class="brand-mark" data-icon="gamepad"></span><span>PREORDER <b>HUB</b><small>GAMING COMMAND CENTER</small></span></div><div class="auth-pitch"><span class="eyebrow">TWOJA KOLEJNA PRZYGODA</span><h1>Wszystkie premiery.<br>Jedno miejsce.</h1><p>Planuj zakupy, porównuj oferty i buduj swoją kolekcję.</p></div><span class="auth-foot">PREORDER HUB / 3.2</span></div>
+    <div class="auth-art"><div class="auth-brand brand"><span class="brand-mark" data-icon="gamepad"></span><span>PREORDER <b>HUB</b><small>GAMING COMMAND CENTER</small></span></div><div class="auth-pitch"><span class="eyebrow">TWOJA KOLEJNA PRZYGODA</span><h1>Wszystkie premiery.<br>Jedno miejsce.</h1><p>Planuj zakupy, porównuj oferty i buduj swoją kolekcję.</p></div><span class="auth-foot">PREORDER HUB / 3.2.2</span></div>
     <main class="auth-main"><div class="auth-form-wrap"><div class="brand mobile-brand"><span class="brand-mark" data-icon="gamepad"></span><span>PREORDER <b>HUB</b></span></div><p class="eyebrow">TWOJE CENTRUM GIER</p><h2 id="auth-title">Witaj ponownie</h2><p class="muted" id="auth-subtitle">Zaloguj się, aby wrócić do swojej listy.</p>
-      <form id="auth-form"><label>Nazwa użytkownika<input id="auth-username" name="username" required maxlength="100" autocomplete="username"></label><label>Hasło<input id="auth-password" name="password" type="password" required maxlength="1024" autocomplete="current-password"></label><p id="auth-hint" class="muted small" hidden>Minimum 12 znaków. Użyj unikalnego hasła.</p><div id="auth-legal" class="auth-legal" hidden><label class="legal-check"><input id="auth-accept" type="checkbox"><span>Akceptuję <a id="auth-terms" href="../terms.html" target="_blank" rel="noopener noreferrer">regulamin</a>. Zapoznałem się z <a id="auth-privacy" href="../privacy.html" target="_blank" rel="noopener noreferrer">informacją o prywatności</a>.</span></label></div><p id="auth-error" class="inline-error" role="alert" hidden></p><button class="btn primary wide" id="auth-submit" type="submit">Zaloguj się</button></form>
-      <p class="auth-switch"><span id="auth-switch-label">Nie masz konta?</span> <button class="text-btn" id="auth-toggle" type="button">Zarejestruj się</button></p><a class="btn secondary wide" href="?demo=1">Obejrzyj wersję demo</a><p class="small muted">Demo działa bez logowania i nie zmienia danych w chmurze.</p><div class="auth-links"><a href="../">O aplikacji</a><a href="../privacy.html">Prywatność</a><a href="../terms.html">Regulamin</a><a href="../recover.html">Napraw PWA</a></div>
+      <form id="auth-form"><label>Nazwa użytkownika<input id="auth-username" name="username" required maxlength="100" autocomplete="username"></label><label>Hasło<input id="auth-password" name="password" type="password" required maxlength="1024" autocomplete="current-password"></label><p id="auth-hint" class="muted small" hidden>Minimum 12 znaków. Użyj unikalnego hasła.</p><div id="auth-legal" class="auth-legal" hidden><label class="legal-check"><input id="auth-accept" type="checkbox"><span>Akceptuję <a id="auth-terms" href="/terms.html" target="_blank" rel="noopener noreferrer">regulamin</a>. Zapoznałem się z <a id="auth-privacy" href="/privacy.html" target="_blank" rel="noopener noreferrer">informacją o prywatności</a>.</span></label></div><p id="auth-error" class="inline-error" role="alert" hidden></p><button class="btn primary wide" id="auth-submit" type="submit">Zaloguj się</button></form>
+      <p class="auth-switch"><span id="auth-switch-label">Nie masz konta?</span> <button class="text-btn" id="auth-toggle" type="button">Zarejestruj się</button></p><a class="btn secondary wide" href="?demo=1">Obejrzyj wersję demo</a><p class="small muted">Demo działa bez logowania i nie zmienia danych w chmurze.</p><div class="auth-links"><a href="/">O aplikacji</a><a href="/privacy.html">Prywatność</a><a href="/terms.html">Regulamin</a><a href="/recover.html">Napraw PWA</a></div>
       <div class="pwa-auth-install" data-pwa-install hidden><button class="btn secondary wide" type="button" data-pwa-open aria-haspopup="dialog">Zainstaluj aplikację</button><p class="small muted">Dodaj Preorder Hub do ekranu głównego telefonu lub tabletu.</p></div>
     </div></main>
   </div>
   <div id="app" class="shell" hidden>
     <aside class="sidebar" id="sidebar"><a class="brand" href="#dashboard"><span class="brand-mark" data-icon="gamepad"></span><span>PREORDER <b>HUB</b><small>GAMING COMMAND CENTER</small></span></a>
       <p class="nav-label">TWOJA PRZESTRZEŃ</p><nav id="desktop-nav" aria-label="Menu główne"></nav>
-      <div class="side-bottom"><div class="connection"><i id="connection-dot"></i><span id="connection-text">Łączenie z API...</span></div><div class="profile"><span id="avatar" class="avatar">PH</span><span class="profile-info"><strong id="profile-name">Mój profil</strong><small id="profile-detail">Preorder Hub</small></span></div><button class="nav-btn logout" id="logout" type="button"><span data-icon="logout"></span><span id="logout-label">Wyloguj się</span></button><span class="version">PREORDER HUB · V3.2.0</span></div>
+      <div class="side-bottom"><div class="connection"><i id="connection-dot"></i><span id="connection-text">Łączenie z API...</span></div><div class="profile"><span id="avatar" class="avatar">PH</span><span class="profile-info"><strong id="profile-name">Mój profil</strong><small id="profile-detail">Preorder Hub</small></span></div><button class="nav-btn logout" id="logout" type="button"><span data-icon="logout"></span><span id="logout-label">Wyloguj się</span></button><span class="version">PREORDER HUB · V3.2.2</span></div>
     </aside>
     <main id="content" class="workspace" tabindex="-1"><header class="topbar"><div class="heading"><div class="eyebrow" id="view-kicker">TWÓJ GAMING COMMAND CENTER</div><h1 id="view-title">Twój hub gier</h1><p id="view-subtitle">Preordery, premiery, budżet i kolekcja w jednym miejscu.</p></div><div class="top-actions"><button id="mobile-menu" class="btn icon-btn mobile-only" type="button" aria-label="Otwórz menu" data-icon="menu"></button><button id="refresh" class="btn icon-btn" type="button" aria-label="Odśwież dane" title="Odśwież dane" data-icon="refresh"></button><label class="search" aria-label="Szukaj gry"><span data-icon="search"></span><input type="search" id="search" placeholder="Szukaj gry..." autocomplete="off"></label><button id="add" type="button" class="btn primary"><span data-icon="plus"></span><span>Dodaj preorder</span></button></div></header>
     <div id="demo-notice" class="banner demo" hidden><span data-icon="info"></span><div><strong>Tryb demonstracyjny</strong> · dane przykładowe, zmiany tylko w pamięci.</div><a href="?">Przejdź do aplikacji</a></div>

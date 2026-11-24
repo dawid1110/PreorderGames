@@ -1,13 +1,13 @@
-# Preorder Hub — GUI i PWA 3.2.0
+# Preorder Hub 3.2.2 — GUI i PWA
 
-Aktualne wydanie `20261124-4`. Wdrożenie: [START_TUTAJ.md](START_TUTAJ.md), zmiany publiczne: [README_PUBLIC_LAUNCH.md](README_PUBLIC_LAUNCH.md).
+Wydanie `20261124-6`. Najważniejsza zmiana: przywrócono właściwy `index.html` strony reklamowej oraz `sw.js` w korzeniu, a ścieżki zasobów w aplikacji są bezwzględne (`/v3/...`).
 
-- `https://preorderhub.pl/` — strona informacyjna; `https://preorderhub.pl/v3/index.html` — aplikacja; `?demo=1` — izolowane demo.
-- W Chrome Android/Tablet otwórz właściwą aplikację (HTTPS, bez demo) → Zainstaluj aplikację → Zainstaluj teraz, jeśli przeglądarka udostępnia instalator. W przeciwnym razie menu Chrome → instalacja/dodanie do ekranu głównego. Na iOS Safari → Udostępnij → Dodaj do ekranu początkowego. Stare ikony `/pwa-list.html` przekierowują; preferuj instalację v3. Nie zmieniono identyfikatora v3 ani scope.
-- `v3/sw.js` przechowuje tylko z góry określone statyczne zasoby, wersjonuje JS i CSS, pomija żądania API, autoryzowane, demo oraz recovery. Przy błędzie cache próbuje sieci; gdy oba zawiodą, pokazuje techniczny ekran awaryjny. Nie zapisuje danych kont i nie gwarantuje synchronizacji offline.
-- Pierwsza migracja z wydań 20261124-2/-3 aktywuje nowy worker automatycznie, bez wymuszonego reloadu. Kolejne aktualizacje: Później / Zaktualizuj teraz. Zapisz formularze także w innych oknach. Tylko okno żądające aktualizacji automatycznie odświeża się, jeśli nadal nie trwa edycja. Numer wydania w ustawieniach. Opcje: sprawdzenie aktualizacji i reset PWA.
-- Recovery: `/recover.html` (po publikacji), również link na ekranie logowania. Zamknij inne okna, kliknij reset. Selektywne wyrejestrowanie znanych workerów i usunięcie statycznego cache, bez czyszczenia tokena. Gdy problem trwa, DevTools → Application → Service Workers → Unregister; `Clear site data` tylko w ostateczności.
-- `sw.js` w korzeniu wyrejestrowuje starą instalację workera. Inne rejestracje/cache poza znanymi nazwami pozostają bez zmian.
-- Przed każdą zmianą statycznego shell zwiększ `RELEASE` w `v3/sw.js`, `release` w `v3/config.js` i znaczniki `?v=` w `v3/index.html`. Opublikuj wszystkie pliki razem. `_headers` jest sugestią dla Cloudflare, zweryfikuj faktyczne HTTP nagłówki. Nie zmieniaj manifestu bez planu migracji.
+- `v3/index.html`, `app.js`, `style.css`, `config.js`, `pwa.js`, `manifest.json`, `sw.js` oraz `assets/` muszą pozostawać w katalogu `v3/`.
+- Worker v3 nie przechwytuje żadnych żądań i nie zapisuje shell w CacheStorage. Chrome sam pobiera pliki i obsługuje przekierowania. Aplikacja wymaga internetu także do uruchomienia.
+- Worker w korzeniu służy wyłącznie do wyrejestrowania starej rejestracji. Worker v3 w tym wydaniu awaryjnym aktywuje się automatycznie, ale nie przeładowuje sam okien. Usuwa wyłącznie cache z prefiksem `preorderhub-v3-shell-`.
+- Manifest v3 pozostaje identyczny z 3.2.0; start URL `/v3/index.html`, zakres `/v3/`, zachowana tożsamość. Instalacja przez menu Chrome nadal dostępna, gdy przeglądarka spełnia swoje warunki. Okno `beforeinstallprompt` zależy od przeglądarki; instrukcja w aplikacji jest dostępna także bez tego zdarzenia. Na Androidzie instaluj z `/v3/index.html`, nie ze strony reklamowej.
+- Po publikacji użyj `/recover.html` w Chrome. Zamknij pozostałe okna i zapisz zmiany; reset nie usuwa tokena ani danych w Turso. W razie konieczności wyrejestruj stary worker ręcznie.
+- Zmienione CSS/JS wersjonuj spójnym sufiksem w HTML i konfiguracji. Aktualizuj numer wydania. Nie włączaj cache HTML w Cloudflare. Plik `_headers` wymaga wsparcia ze strony hostingu; sprawdź rzeczywiste nagłówki.
+- `api_v2.py`, `public_launch.py`, migracje i konfiguracja Render pozostają bez zmian.
 
-Backend: `uvicorn api_v2:app --host 0.0.0.0 --port $PORT`. Domyślnie nowe funkcje są wyłączone, bez migracji; dotychczasowe logowanie działa na istniejących tabelach. Nie zmieniaj istniejących sekretów.
+Zobacz `START_TUTAJ.md` oraz `TESTY.md`. Pełna dokumentacja PDF/MD i opis Public Launch są historycznym opisem 3.1/3.2.0; dla działania PWA pierwszeństwo ma ten plik.
