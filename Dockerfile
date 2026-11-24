@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Uruchomienie aplikacji (Render domyślnie przekazuje port w zmiennej PORT)
-CMD uvicorn api:app --host 0.0.0.0 --port ${PORT:-10000}
+CMD uvicorn api_v2:app --host 0.0.0.0 --port ${PORT:-10000}

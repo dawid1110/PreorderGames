@@ -1,0 +1,10 @@
+.git
+__pycache__
+**/__pycache__
+*.pyc
+.venv
+venv
+.env
+.env.*
+preorders.json
+.pytest_cache

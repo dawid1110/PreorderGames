@@ -1,2 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Sekrety i lokalne dane
+.env
+.env.*
+!.env.example
 preorders.json
-update-covers.py
+
+# IDE i system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
