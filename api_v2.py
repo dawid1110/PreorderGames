@@ -6,6 +6,7 @@ For the weekly Telegram job, apply weekly_summary.sql once before enabling it.
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import inspect
 import logging
@@ -17,12 +18,12 @@ from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Annotated
-from urllib.parse import urlsplit
+from types import SimpleNamespace
+from urllib.parse import urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
 import httpx
 import jwt
-import libsql_client
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -65,10 +66,8 @@ def validate_config() -> None:
         raise RuntimeError("SECRET_KEY must contain at least 32 bytes of secure random material")
     if not DATABASE_URL:
         raise RuntimeError("Missing TURSO_DATABASE_URL")
-    scheme = urlsplit(DATABASE_URL).scheme.lower()
-    if scheme not in {"libsql", "wss", "file"}:
-        raise RuntimeError("Use libsql:// or wss:// for interactive transactions, or file: for local tests")
-    if scheme != "file" and not DATABASE_TOKEN:
+    turso_https_url(DATABASE_URL)
+    if not DATABASE_TOKEN:
         raise RuntimeError("Missing TURSO_AUTH_TOKEN")
     if ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
         raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES must be positive")
@@ -92,7 +91,9 @@ async def lifespan(app: FastAPI):
     app.state.dummy_hash = await run_in_threadpool(password_hasher.hash, secrets.token_hex(32))
     async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0), follow_redirects=False) as http:
         app.state.http = http
-        yield
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0, connect=5.0), follow_redirects=False) as db_http:
+            app.state.db_http = db_http
+            yield
 
 
 app = FastAPI(title="Preorder Hub API", lifespan=lifespan)
@@ -249,8 +250,165 @@ class CollectionReference(InputModel):
 # ==========================================
 # DATABASE / ATOMIC TRANSACTIONS
 # ==========================================
+# Turso's documented Hrana HTTP v2 protocol. Unlike the archived Python
+# libsql-client, this uses HTTPS even for a libsql:// database URL.
+# Each client is a single logical stream; its baton is never shared across requests.
+# Protocol: https://github.com/tursodatabase/libsql/blob/main/docs/HTTP_V2_SPEC.md
+class TursoDatabaseError(RuntimeError):
+    def __init__(self, code):
+        safe_code = str(code or "UNKNOWN")
+        self.code = safe_code if re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", safe_code) else "UNKNOWN"
+        super().__init__(f"Turso database error ({self.code})")
+
+
+def turso_https_url(value: str, *, allow_prefix: bool = False) -> str:
+    try:
+        parts = urlsplit(value.strip())
+        if (parts.scheme.lower() not in ({"https"} if allow_prefix else {"https", "libsql", "wss"})
+                or not parts.hostname or parts.username is not None or parts.password is not None
+                or parts.query or parts.fragment or any(ch.isspace() for ch in value.strip())
+                or (not allow_prefix and parts.path not in {"", "/"})):
+            raise ValueError
+        _ = parts.port
+    except ValueError:
+        raise RuntimeError("TURSO_DATABASE_URL must be a database URL without credentials, e.g. https://database.turso.io") from None
+    return urlunsplit(("https", parts.netloc, parts.path.rstrip("/"), "", ""))
+
+
+def encode_db_value(value):
+    if value is None:
+        return {"type": "null"}
+    if isinstance(value, int):
+        return {"type": "integer", "value": str(int(value))}
+    if isinstance(value, float):
+        return {"type": "float", "value": value}
+    if isinstance(value, str):
+        return {"type": "text", "value": value}
+    if isinstance(value, bytes):
+        return {"type": "blob", "base64": base64.b64encode(value).decode("ascii")}
+    raise TypeError("Unsupported SQL parameter")
+
+
+def decode_db_value(value):
+    kind = value["type"]
+    if kind == "null":
+        return None
+    if kind == "integer":
+        return int(value["value"])
+    if kind == "float":
+        return float(value["value"]) if value["value"] is not None else float("nan")
+    if kind == "text":
+        return value["value"]
+    if kind == "blob":
+        encoded = value["base64"]
+        return base64.b64decode(encoded + "=" * (-len(encoded) % 4), validate=True)
+    raise TursoDatabaseError("UNSUPPORTED_VALUE")
+
+
+class TursoHTTPClient:
+    def __init__(self, http, url, token):
+        self.http = http
+        self.base_url = turso_https_url(url)
+        self.origin = urlsplit(self.base_url)
+        self.token = token
+        self.baton = None
+        self.closed = False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        await self.close()
+
+    def _update_base_url(self, value):
+        target = turso_https_url(value, allow_prefix=True)
+        parts = urlsplit(target)
+        # Do not send the database token to an arbitrary host or over plaintext.
+        same_origin = (parts.hostname, parts.port or 443) == (self.origin.hostname, self.origin.port or 443)
+        turso_route = (self.origin.hostname.endswith(".turso.io") and parts.hostname.endswith(".turso.io")
+                       and (parts.port or 443) == 443)
+        if not (same_origin or turso_route):
+            raise TursoDatabaseError("UNTRUSTED_BASE_URL")
+        self.base_url = target
+
+    async def _request(self, command):
+        if self.closed:
+            raise TursoDatabaseError("STREAM_CLOSED")
+        try:
+            response = await self.http.post(
+                self.base_url + "/v2/pipeline",
+                headers={"Authorization": f"Bearer {self.token}"},
+                json={"baton": self.baton, "requests": [command]},
+            )
+            response.raise_for_status()
+            payload = response.json()
+            baton = payload["baton"]
+            if baton is not None and (not isinstance(baton, str) or not baton):
+                raise TursoDatabaseError("INVALID_BATON")
+            self.baton = baton
+            if baton is None:
+                # A closed stream must never silently restart inside a transaction.
+                self.closed = True
+            if payload.get("base_url") is not None:
+                self._update_base_url(payload["base_url"])
+            results = payload["results"]
+            if len(results) != 1:
+                raise TursoDatabaseError("INVALID_RESULT_COUNT")
+            item = results[0]
+            if item["type"] not in {"ok", "error"}:
+                raise TursoDatabaseError("INVALID_RESULT_TYPE")
+            if item["type"] == "ok" and item["response"]["type"] != command["type"]:
+                raise TursoDatabaseError("INVALID_RESPONSE_TYPE")
+        except httpx.HTTPStatusError as exc:
+            self.closed = True
+            raise TursoDatabaseError(f"HTTP_{exc.response.status_code}") from None
+        except BaseException:
+            # Transport or malformed response: the server may already have applied
+            # the command. Never retry blindly, or open a replacement stream.
+            self.closed = True
+            raise
+        if item["type"] == "error":
+            # A SQL error is not a transport failure: keep the baton for rollback.
+            raise TursoDatabaseError(item.get("error", {}).get("code"))
+        return item["response"]
+
+    async def execute(self, sql, args=()):
+        response = await self._request({"type": "execute", "stmt": {
+            "sql": sql, "args": [encode_db_value(value) for value in args], "want_rows": True,
+        }})
+        result = response["result"]
+        return SimpleNamespace(
+            rows=[tuple(decode_db_value(value) for value in row) for row in result["rows"]],
+            rows_affected=int(result["affected_row_count"]),
+            last_insert_rowid=int(result["last_insert_rowid"]) if result["last_insert_rowid"] is not None else None,
+        )
+
+    async def transaction(self):
+        await self.execute("BEGIN IMMEDIATE")
+        if self.closed:
+            raise TursoDatabaseError("TRANSACTION_STREAM_CLOSED")
+        return self
+
+    async def commit(self):
+        await self.execute("COMMIT")
+
+    async def rollback(self):
+        await self.execute("ROLLBACK")
+
+    async def close(self):
+        if self.closed:
+            return
+        try:
+            if self.baton is not None:
+                await self._request({"type": "close"})
+        except Exception as exc:
+            log_db_error(exc, "Turso stream cleanup failed")
+        finally:
+            self.closed = True
+
+
 def get_db_client():
-    return libsql_client.create_client(url=DATABASE_URL, auth_token=DATABASE_TOKEN)
+    return TursoHTTPClient(app.state.db_http, DATABASE_URL, DATABASE_TOKEN)
 
 
 def log_db_error(exc: BaseException, message: str) -> None:
